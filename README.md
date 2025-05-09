@@ -31,9 +31,8 @@ git clone https://github.com/bartkw12/Custom-Neural-Network-from-Scratch.git
 cd Custom-Neural-Network-from-Scratch
 pip install -r requirements.txt
 ```
+## Project Structure
 ```bash
-Project Structure
------------------
 Custom-Neural-Network-from-Scratch/
 ├── src/
 │   └── CustomNN/
@@ -44,3 +43,5 @@ Custom-Neural-Network-from-Scratch/
 ├── test.py                       # Training script
 ├── requirements.txt
 └── README.md
+```
+

@@ -12,3 +12,6 @@ __pycache__/
 # Virtual environment
 venv/
 env/
+
+# Ignore the images folder
+images/
