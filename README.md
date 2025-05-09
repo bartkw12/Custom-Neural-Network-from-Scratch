@@ -19,6 +19,9 @@ The NN features the following techniques:
 - Early stopping
 - L2 regularization
 
+## Training Results
+![Training Curve](images/trainingcurve.JPG)
+
 ## Requirements
 - Python 3.8+
 - NumPy

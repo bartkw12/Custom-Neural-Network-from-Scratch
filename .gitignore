@@ -14,4 +14,4 @@ venv/
 env/
 
 # Ignore the images folder
-images/
+# images/
