@@ -30,3 +30,17 @@ The NN features the following techniques:
 git clone https://github.com/bartkw12/Custom-Neural-Network-from-Scratch.git
 cd Custom-Neural-Network-from-Scratch
 pip install -r requirements.txt
+```
+```bash
+Project Structure
+-----------------
+Custom-Neural-Network-from-Scratch/
+├── src/
+│   └── CustomNN/
+│       ├── config.py             # Hyperparameters
+│       ├── data_preprocessing.py # Data loading & preprocessing
+│       ├── model.py              # Core network architecture
+│       └── techniques.py         # Optimization/regularization
+├── test.py                       # Training script
+├── requirements.txt
+└── README.md
