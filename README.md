@@ -21,6 +21,8 @@ The NN features the following techniques:
 
 ## Training Results
 ![Training Curve](images/trainingcurve.JPG)
+Note: These results were attained with the current hyperparameter values in the config.py file.
+There is still potential for hyperparameter optimization.
 
 ## Requirements
 - Python 3.8+
