@@ -14,8 +14,6 @@ class ADAM_Optimizer:
         self.decay = decay
         self.iterations = 0
 
-        # print(self.beta1, self.beta2, self.decay)
-
     # adjust the learning rate based on decay factor and # of iterations
     def pre_update_params(self):
         if self.decay:
@@ -46,21 +44,9 @@ class ADAM_Optimizer:
         layer.weight_cache = self.beta2 * layer.weight_cache + (1 - self.beta2) * layer.dweights ** 2
         layer.bias_cache = self.beta2 * layer.bias_cache + (1 - self.beta2) * layer.dbiases**2
 
-        # Debug prints
-        # print("Weight Momentums:\n", layer.weight_momentums)
-        # print("Bias Momentums:\n", layer.bias_momentums)
-        # print("Weight Cache:\n", layer.weight_cache)
-        # print("Bias Cache:\n", layer.bias_cache)
-
         # apply bias correction to second moment estimates
         weight_cache_corrected = layer.weight_cache / (1 - self.beta2 ** (self.iterations + 1))
         bias_cache_corrected = layer.bias_cache / (1 - self.beta2 ** (self.iterations + 1))
-
-        # Debug prints
-        # print("Corrected Weight Momentums:\n", weight_momentums_corrected)
-        # print("Corrected Bias Momentums:\n", bias_momentums_corrected)
-        # print("Corrected Weight Cache:\n", weight_cache_corrected)
-        # print("Corrected Bias Cache:\n", bias_cache_corrected)
 
         # update weights and biases w corrected momentum and cache
         layer.weights += -self.current_learning_rate * weight_momentums_corrected / (np.sqrt(weight_cache_corrected)

@@ -1,3 +1,5 @@
+# Hyperparameters for NN
+
 # Training Parameters
 BATCH_SIZE = 256
 LEARNING_RATE = 0.002

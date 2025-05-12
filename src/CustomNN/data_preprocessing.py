@@ -15,8 +15,6 @@ def load_fashion_MNIST(seed=SEED):
     train_dataset = datasets.FashionMNIST(root='./data', train=True, download=True)
     test_dataset = datasets.FashionMNIST(root='./data', train=False, download=True)
 
-    # print(train_dataset.data.shape, test_dataset.data.shape)
-
     return train_dataset, test_dataset
 
 
@@ -75,6 +73,3 @@ if __name__ == "__main__":
     train_dataset, test_dataset = load_fashion_MNIST()
     (X_train, Y_train), (X_validation, Y_validation), (X_test, Y_test) = preprocess_data(train_dataset, test_dataset)
 
-    # print(X_train.shape)
-    # print(X_validation.shape)
-    # print(X_test.shape)
