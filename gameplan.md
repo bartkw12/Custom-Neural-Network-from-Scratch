@@ -1,7 +1,7 @@
 # Project Improvement Gameplan
 
 ## Goal
-Transform this from a class assignment into a polished portfolio piece that demonstrates deep understanding of neural networks, professional Python practices, and rigorous validation.
+Transform this from a class assignment into a polished portfolio piece that demonstrates deep understanding of neural networks, professional Python practices, and rigorous validation. I am a Computer Engineering Masters student with a strong interest in AI/ML, and I want this project to reflect my capabilities and read like a research-level implementation.
 
 ---
 
