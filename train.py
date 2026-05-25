@@ -1,7 +1,7 @@
-from model import Layer_Dense, Activation_ReLU, Activation_Softmax, Categorical_Cross_entropy_loss
-from techniques import Batch_Normalization, ADAM_Optimizer, Early_Stopping, Dropout
-from data_preprocessing import load_fashion_MNIST, preprocess_data
-from config import BATCH_SIZE, EPOCHS, LAMBDA, DROPOUT_RATE_INPUT, DROPOUT_RATE_HIDDEN, INPUT_SIZE, OUTPUT_SIZE, HIDDEN_UNITS, LEARNING_RATE, HIDDEN_LAYERS, MOMENTUM, EPSILON
+from custom_nn import Layer_Dense, Activation_ReLU, Activation_Softmax, Categorical_Cross_entropy_loss
+from custom_nn import Batch_Normalization, ADAM_Optimizer, Early_Stopping, Dropout
+from custom_nn import load_fashion_MNIST, preprocess_data
+from custom_nn.config import BATCH_SIZE, EPOCHS, LAMBDA, DROPOUT_RATE_INPUT, DROPOUT_RATE_HIDDEN, INPUT_SIZE, OUTPUT_SIZE, HIDDEN_UNITS, LEARNING_RATE, HIDDEN_LAYERS, MOMENTUM, EPSILON
 import matplotlib.pyplot as plt
 import numpy as np
 
