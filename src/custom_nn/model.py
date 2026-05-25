@@ -1,4 +1,4 @@
-from config import LAMBDA
+from .config import LAMBDA
 import numpy as np
 
 

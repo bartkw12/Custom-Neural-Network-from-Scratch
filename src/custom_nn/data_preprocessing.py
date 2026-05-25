@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 from torchvision import datasets
-from config import SEED
+from .config import SEED
 
 def load_fashion_MNIST(seed=SEED):
     """
