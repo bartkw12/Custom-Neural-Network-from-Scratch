@@ -12,6 +12,13 @@ __pycache__/
 # Virtual environment
 venv/
 env/
+.venv/
 
-# Ignore the images folder
-# images/
+# Local data
+data/
+
+# Packaging artifacts
+*.egg-info/
+build/
+dist/
+.eggs/
