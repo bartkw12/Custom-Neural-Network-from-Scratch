@@ -1,3 +1,7 @@
+from dataclasses import dataclass
+from typing import Any
+
+
 # Hyperparameters for NN
 
 # Training Parameters
@@ -34,3 +38,88 @@ BETA2 = 0.999
 
 # Other Settings
 SEED = 9782
+
+
+@dataclass(slots=True)
+class NetworkConfig:
+	# Architecture (simplified)
+	input_size: int = INPUT_SIZE
+	output_size: int = OUTPUT_SIZE
+	hidden_units: int = HIDDEN_UNITS
+	hidden_layers: int = HIDDEN_LAYERS
+
+	# Architecture (explicit override)
+	layer_specs: list[dict[str, Any]] | None = None
+
+	# Training
+	batch_size: int = BATCH_SIZE
+	learning_rate: float = LEARNING_RATE
+	epochs: int = EPOCHS
+	l2_lambda: float = LAMBDA
+	seed: int = SEED
+
+	# Dropout
+	dropout_rate_input: float = DROPOUT_RATE_INPUT
+	dropout_rate_hidden: float = DROPOUT_RATE_HIDDEN
+
+	# Batch Normalization
+	bn_momentum: float = MOMENTUM
+	bn_epsilon: float = EPSILON
+
+	# ADAM optimizer
+	adam_decay: float = DECAY
+	adam_epsilon: float = EPSILON_A
+	adam_beta1: float = BETA1
+	adam_beta2: float = BETA2
+
+	# Early Stopping
+	patience: int = PATIENCE
+	min_delta: float = MIN_DELTA
+
+	def __post_init__(self):
+		if self.hidden_layers < 1 and self.layer_specs is None:
+			raise ValueError("hidden_layers must be at least 1 when layer_specs is not provided")
+
+	def get_layer_specs(self) -> list[dict[str, Any]]:
+		if self.layer_specs is not None:
+			return self.layer_specs
+
+		layer_specs = [
+			{"type": "dense", "n_inputs": self.input_size, "n_neurons": self.hidden_units, "l2_lambda": self.l2_lambda},
+			{"type": "batch_norm", "n_neurons": self.hidden_units, "momentum": self.bn_momentum, "epsilon": self.bn_epsilon},
+			{"type": "relu"},
+			{
+				"type": "dropout",
+				"dropout_rate_input": self.dropout_rate_input,
+				"dropout_rate_hidden": self.dropout_rate_hidden,
+				"input_layer": True,
+			},
+		]
+
+		for _ in range(self.hidden_layers - 1):
+			layer_specs.extend(
+				[
+					{"type": "dense", "n_inputs": self.hidden_units, "n_neurons": self.hidden_units, "l2_lambda": self.l2_lambda},
+					{"type": "batch_norm", "n_neurons": self.hidden_units, "momentum": self.bn_momentum, "epsilon": self.bn_epsilon},
+					{"type": "relu"},
+					{
+						"type": "dropout",
+						"dropout_rate_input": self.dropout_rate_input,
+						"dropout_rate_hidden": self.dropout_rate_hidden,
+						"input_layer": False,
+					},
+				]
+			)
+
+		layer_specs.extend(
+			[
+				{"type": "dense", "n_inputs": self.hidden_units, "n_neurons": self.output_size, "l2_lambda": self.l2_lambda},
+				{"type": "softmax"},
+			]
+		)
+
+		return layer_specs
+
+
+def default_config() -> NetworkConfig:
+	return NetworkConfig()
