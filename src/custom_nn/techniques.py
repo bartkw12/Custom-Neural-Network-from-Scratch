@@ -97,16 +97,31 @@ class Early_Stopping:
         self.patience = patience    # Number of epochs to wait for improvement
         self.min_delta = min_delta  # Minimum change in validation loss to qualify as improvement
         self.best_loss = np.inf     # Stores the best validation loss encountered
-        self.best_weights = None    # Stores the best weights
+        self.best_layer_states = None  # Stores the best trainable layer state
         self.wait = 0               # Counter for epochs without improvement
+
+    def _capture_layer_state(self, layer):
+        state = {}
+
+        if hasattr(layer, 'weights'):
+            state['weights'] = layer.weights.copy()
+            state['biases'] = layer.biases.copy()
+
+        if hasattr(layer, 'gamma'):
+            state['gamma'] = layer.gamma.copy()
+            state['beta'] = layer.beta.copy()
+            state['running_mean'] = layer.running_mean.copy()
+            state['running_variance'] = layer.running_variance.copy()
+
+        return state
 
     def forward(self, validation_loss, layers):
         if validation_loss < self.best_loss - self.min_delta:
             # Improvement has been detected
             self.best_loss = validation_loss
             self.wait = 0
-            # Save the best weights from the layers list
-            self.best_weights = [layer.weights.copy() for layer in layers if hasattr(layer, 'weights')]
+            # Save the best state from all trainable layers.
+            self.best_layer_states = [self._capture_layer_state(layer) for layer in layers]
         else:
             # if no improvement is detected
             self.wait += 1
@@ -115,13 +130,18 @@ class Early_Stopping:
         return False
 
     def restore_best_weights(self, layers):
-        # Restore the best weights to the layers
-        if self.best_weights is not None:
-            idx = 0
-            for layer in layers:
-                if hasattr(layer, 'weights'):
-                    layer.weights = self.best_weights[idx].copy()
-                    idx += 1
+        # Restore the best state to the layers.
+        if self.best_layer_states is not None:
+            for layer, state in zip(layers, self.best_layer_states):
+                if 'weights' in state:
+                    layer.weights = state['weights'].copy()
+                    layer.biases = state['biases'].copy()
+
+                if 'gamma' in state:
+                    layer.gamma = state['gamma'].copy()
+                    layer.beta = state['beta'].copy()
+                    layer.running_mean = state['running_mean'].copy()
+                    layer.running_variance = state['running_variance'].copy()
 
 
 # Dropout
