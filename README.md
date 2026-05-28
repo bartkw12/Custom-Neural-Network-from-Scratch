@@ -20,13 +20,13 @@ The NN features the following techniques:
 - L2 regularization
 
 ## Training Results
-![Training Curve](images/trainingcurve.JPG)
+![Training Curve](results/trainingcurve.JPG)
 
 Note: These results were attained with the current hyperparameter values in the config.py file.
 There is still potential for hyperparameter optimization.
 
 ## Requirements
-- Python 3.8+
+- Python 3.10+
 - NumPy
 - Matplotlib
 - PyTorch (for dataset loading)
@@ -36,18 +36,53 @@ There is still potential for hyperparameter optimization.
 git clone https://github.com/bartkw12/Custom-Neural-Network-from-Scratch.git
 cd Custom-Neural-Network-from-Scratch
 pip install -r requirements.txt
+pip install -e .
 ```
+
+## Usage
+```bash
+python train.py
+```
+
+Or run the package entry point:
+
+```bash
+python -m custom_nn
+```
+
+Programmatic usage:
+
+```python
+from custom_nn import NeuralNetwork, NetworkConfig, load_fashion_MNIST, preprocess_data
+
+config = NetworkConfig()
+model = NeuralNetwork(config)
+
+train_dataset, test_dataset = load_fashion_MNIST(seed=config.seed)
+(X_train, Y_train), (X_val, Y_val), (X_test, Y_test) = preprocess_data(train_dataset, test_dataset)
+
+history = model.train(X_train, Y_train, X_val, Y_val)
+metrics = model.evaluate(X_test, Y_test)
+```
+
 ## Project Structure
 ```bash
 Custom-Neural-Network-from-Scratch/
+├── results/
+│   └── trainingcurve.JPG        # Saved training visualization
 ├── src/
-│   └── CustomNN/
-│       ├── config.py             # Hyperparameters
+│   └── custom_nn/
+│       ├── __init__.py           # Public package exports
+│       ├── __main__.py           # Enables `python -m custom_nn`
+│       ├── config.py             # Hyperparameters + NetworkConfig dataclass
 │       ├── data_preprocessing.py # Data loading & preprocessing
-│       ├── model.py              # Core network architecture
+│       ├── model.py              # Core layer and loss implementations
+│       ├── network.py            # NeuralNetwork class API
 │       └── techniques.py         # Optimization/regularization
-├── test.py                       # Training script
+├── train.py                      # Thin training entry point
+├── pyproject.toml
 ├── requirements.txt
-└── README.md
+├── README.md
+└── AGENTS.md
 ```
 

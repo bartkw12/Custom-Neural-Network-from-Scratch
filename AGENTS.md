@@ -9,22 +9,25 @@ See [gameplan.md](gameplan.md) for the planned improvement roadmap (7 phases).
 ## Architecture
 
 ```
-src/CustomNN/
-├── config.py              # All hyperparameters (single source of truth)
+src/custom_nn/
+├── config.py              # Hyperparameters + NetworkConfig dataclass
 ├── data_preprocessing.py  # Fashion MNIST loading & preprocessing pipeline
 ├── model.py               # Layer_Dense, Activation_ReLU, Activation_Softmax, loss
+├── network.py             # NeuralNetwork class encapsulating training/eval/save/load
 ├── techniques.py          # ADAM_Optimizer, Early_Stopping, Dropout, Batch_Normalization
-└── __init__.py            # Package exports with relative imports
-test.py                    # Main training script (entry point)
+├── __init__.py            # Public package exports
+└── __main__.py            # Package entry point for `python -m custom_nn`
+train.py                   # Thin training script (repo entry point)
+results/                   # Saved figures and model outputs
 ```
 
-**Data flow**: Load Fashion MNIST → NumPy arrays → standardize (train stats only) → mini-batch training → forward/backward/ADAM update → early stopping
+**Data flow**: Load Fashion MNIST → NumPy arrays → standardize (train stats only) → `NeuralNetwork.train()` mini-batch loop → forward/backward/ADAM update → early stopping
 
 ## Conventions
 
 - **Classes**: `PascalCase_With_Underscores` (e.g., `Layer_Dense`, `Activation_ReLU`)
 - **Methods**: All layers implement `forward()` and `backward()` — preserve this pattern
-- **Config constants**: `UPPER_SNAKE_CASE` in `config.py` — never hardcode hyperparameters elsewhere
+- **Config constants**: `UPPER_SNAKE_CASE` in `config.py` remain available; `NetworkConfig` is the structured API for wiring the model
 - **Layer caching**: Layers store `self.inputs`, `self.output`, `self.dinputs` for backprop
 - **Inverted dropout**: Scale by `1/keep_prob` during training, identity at inference
 
@@ -33,22 +36,25 @@ test.py                    # Main training script (entry point)
 ```bash
 # Install dependencies
 pip install -r requirements.txt
+pip install -e .
 
 # Run training (downloads ~200MB Fashion MNIST on first run)
-python test.py
+python train.py
+
+# Or run the package entry point
+python -m custom_nn
 ```
 
 ## Known Issues
 
-- `test.py` uses bare imports (`from model import...`) — conflicts with package-style relative imports in `__init__.py`. When running as script, execute from the `src/CustomNN/` directory or adjust imports.
-- Training functions use global state (`layers` list, optimizer objects) — not class-based yet.
 - `plt.show()` at end of training blocks until figure window is closed.
-- No `pyproject.toml` or installable package setup yet.
+- `train.py` prepends `src/` to `sys.path` so it can run directly from the repo root before installation. After `pip install -e .`, package imports work without that fallback.
+- `NetworkConfig` currently coexists with legacy module-level constants in `config.py` as a transition step.
 
 ## Key Design Decisions
 
 - **No ML library usage**: All forward/backward math is hand-implemented in NumPy. Do NOT replace with PyTorch/TensorFlow equivalents.
-- **Centralized config**: All hyperparameters live in `config.py`. New parameters must be added there.
+- **Centralized config**: Hyperparameter defaults live in `config.py`. New parameters must be added there and surfaced through `NetworkConfig` when they affect model wiring or training.
 - **Standardization**: Computed from training set only, applied to val/test (prevents data leakage).
 - **Batch norm momentum**: Set to 0.185 (intentionally low vs typical 0.9–0.99) — do not "fix" without discussion.
 
@@ -57,5 +63,5 @@ python test.py
 1. Implement `forward(self, inputs, training=True)` and `backward(self, dvalues)`
 2. Cache necessary values in `self.*` during forward for backward pass
 3. Export from `__init__.py`
-4. Add any new hyperparameters to `config.py`
-5. Integrate into the `layers` list in `test.py`
+4. Add any new hyperparameters to `config.py` and thread them through `NetworkConfig` when needed
+5. Integrate into `NeuralNetwork._build_layers()` in `network.py`
