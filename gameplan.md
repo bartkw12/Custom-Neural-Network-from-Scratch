@@ -8,19 +8,19 @@ Transform this from a class assignment into a polished portfolio piece that demo
 ## Phase 1: Structural Cleanup
 > Fix naming, imports, and project packaging so the repo looks professional at first glance.
 
-- [ ] Rename `test.py` → `train.py`
-- [ ] Convert all bare imports to relative imports (`from .config import ...`)
-- [ ] Add `src/CustomNN/__init__.py` (done) and `src/__init__.py`
-- [ ] Add `pyproject.toml` for pip-installable package (`pip install -e .`)
-- [ ] Update `requirements.txt` (unpin torch to reasonable range, drop torchvision if unused directly)
-- [ ] Add `.gitignore` (data/, __pycache__/, *.pyc, .venv/, etc.)
+- [x] Rename `test.py` → `train.py`
+- [x] Convert all bare imports to relative imports (`from .config import ...`)
+- [x] Restructure the package to `src/custom_nn/` with `__init__.py`
+- [x] Add `pyproject.toml` for pip-installable package (`pip install -e .`)
+- [x] Update `requirements.txt` (unpin torch to reasonable range, keep torchvision for dataset loading)
+- [x] Add `.gitignore` (data/, __pycache__/, *.pyc, .venv/, etc.)
 
 ---
 
 ## Phase 2: Refactor into a Clean API
 > Make the neural network a reusable class rather than procedural scripts.
 
-- [ ] Create a `NeuralNetwork` class with methods:
+- [x] Create a `NeuralNetwork` class with methods:
   - `__init__(config)` — build layers from config
   - `forward(X, training=True)` — forward pass
   - `backward(y_true)` — backward pass
@@ -28,8 +28,8 @@ Transform this from a class assignment into a polished portfolio piece that demo
   - `predict(X)` — inference
   - `evaluate(X, Y)` — return loss + accuracy
   - `save(path)` / `load(path)` — serialize weights with `np.save`/`np.load`
-- [ ] Move training loop logic out of the script and into the class
-- [ ] Keep `train.py` as a thin entry point that instantiates and calls the class
+- [x] Move training loop logic out of the script and into the class
+- [x] Keep `train.py` as a thin entry point that instantiates and calls the class
 
 ---
 
@@ -87,7 +87,7 @@ Transform this from a class assignment into a polished portfolio piece that demo
 - [ ] Per-class accuracy bar chart (which clothing items are hardest?)
 - [ ] Sample predictions grid (correct and incorrect, showing images)
 - [ ] Training curve comparison plot (custom vs. PyTorch)
-- [ ] Save all figures to `images/` with descriptive names
+- [ ] Save all figures to `results/` with descriptive names
 
 ---
 
@@ -113,8 +113,8 @@ Transform this from a class assignment into a polished portfolio piece that demo
 
 | Phase | Impact | Effort | Status |
 |-------|--------|--------|--------|
-| 1. Structural Cleanup | Medium | Low | Not Started |
-| 2. Refactor to Class API | High | Medium | Not Started |
+| 1. Structural Cleanup | Medium | Low | Completed |
+| 2. Refactor to Class API | High | Medium | Completed |
 | 3. PyTorch Comparison | Very High | Medium | Not Started |
 | 4. Testing & Validation | High | Medium | Not Started |
 | 5. CLI & Experiments | Medium | Low | Not Started |
@@ -125,6 +125,10 @@ Transform this from a class assignment into a polished portfolio piece that demo
 
 ## Notes
 - Phases 1-2 should be done first (they unblock everything else)
+- Phases 1-2 are now complete: the codebase is packaged under `src/custom_nn/`, exposes `NetworkConfig` + `NeuralNetwork`, and supports both `python train.py` and `python -m custom_nn`
 - Phase 3 is the marquee feature — most impressive to reviewers
+- For Phase 3, reuse the exact same preprocessed train/validation/test split for both implementations instead of preprocessing separately, otherwise the comparison will not be truly apples-to-apples
+- `results/` has replaced `images/` as the output directory; future plots, checkpoints, and comparison tables should land there
+- `NetworkConfig` currently coexists with legacy module-level constants in `config.py`; Phase 3 code should prefer the config object to avoid reintroducing global wiring
 - Phase 4 is what separates this from "followed a tutorial"
 - Phases can overlap (e.g., write docs as you build each feature)
