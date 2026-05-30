@@ -19,3 +19,4 @@ dev = ["pytest>=7.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+include = ["custom_nn", "pytorch_nn"]
