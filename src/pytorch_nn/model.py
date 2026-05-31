@@ -10,6 +10,7 @@ class FashionMNISTNet(nn.Module):
         super().__init__()
         self.config = config if config is not None else default_config()
         self.layers = nn.ModuleList(self._build_layers())
+        self.reset_parameters()
 
     def _build_layers(self) -> list[nn.Module]:
         layers: list[nn.Module] = []
@@ -36,6 +37,12 @@ class FashionMNISTNet(nn.Module):
                 raise ValueError(f"Unsupported layer type: {layer_type}")
 
         return layers
+
+    def reset_parameters(self) -> None:
+        for layer in self.layers:
+            if isinstance(layer, nn.Linear):
+                nn.init.normal_(layer.weight, mean=0.0, std=0.01)
+                nn.init.zeros_(layer.bias)
 
     def forward(self, inputs: Tensor) -> Tensor:
         outputs = inputs
