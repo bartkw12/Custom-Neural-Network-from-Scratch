@@ -5,6 +5,10 @@ from torch import Tensor, nn
 from custom_nn.config import NetworkConfig, default_config
 
 
+def _to_pytorch_bn_momentum(custom_momentum: float) -> float:
+    return 1.0 - custom_momentum
+
+
 class FashionMNISTNet(nn.Module):
     def __init__(self, config: NetworkConfig | None = None):
         super().__init__()
@@ -21,7 +25,13 @@ class FashionMNISTNet(nn.Module):
             if layer_type == "dense":
                 layers.append(nn.Linear(spec["n_inputs"], spec["n_neurons"]))
             elif layer_type == "batch_norm":
-                layers.append(nn.BatchNorm1d(spec["n_neurons"], eps=spec.get("epsilon", self.config.bn_epsilon)))
+                layers.append(
+                    nn.BatchNorm1d(
+                        spec["n_neurons"],
+                        eps=spec.get("epsilon", self.config.bn_epsilon),
+                        momentum=_to_pytorch_bn_momentum(spec.get("momentum", self.config.bn_momentum)),
+                    )
+                )
             elif layer_type == "relu":
                 layers.append(nn.ReLU())
             elif layer_type == "dropout":
