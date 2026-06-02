@@ -1,5 +1,8 @@
 """Training entry point for the PyTorch comparison implementation."""
 
+import random
+
+import numpy as np
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -16,6 +19,18 @@ def get_device() -> torch.device:
 		return torch.device("mps")
 
 	return torch.device("cpu")
+
+
+def seed_everything(seed: int) -> None:
+	random.seed(seed)
+	np.random.seed(seed)
+	torch.manual_seed(seed)
+
+	if torch.cuda.is_available():
+		torch.cuda.manual_seed_all(seed)
+
+	torch.backends.cudnn.deterministic = True
+	torch.backends.cudnn.benchmark = False
 
 
 def _build_dataloader(
@@ -36,6 +51,7 @@ def _to_class_indices(labels: torch.Tensor) -> torch.Tensor:
 
 def prepare_dataloaders(config: NetworkConfig | None = None) -> tuple[DataLoader, DataLoader, DataLoader]:
 	config = config if config is not None else default_config()
+	seed_everything(config.seed)
 
 	train_dataset, test_dataset = load_fashion_MNIST(seed=config.seed)
 	(x_train, y_train), (x_val, y_val), (x_test, y_test) = preprocess_data(train_dataset, test_dataset)
