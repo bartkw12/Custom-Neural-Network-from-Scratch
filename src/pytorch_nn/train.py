@@ -157,6 +157,45 @@ def train_model(
 	return history
 
 
+def evaluate_test_set(
+	model: torch.nn.Module,
+	test_loader: DataLoader,
+	device: torch.device | None = None,
+) -> dict[str, float]:
+	device = device if device is not None else get_device()
+	model = model.to(device)
+	criterion = torch.nn.CrossEntropyLoss()
+
+	model.eval()
+	test_loss_total = 0.0
+	test_sample_count = 0
+	correct_predictions = 0
+
+	with torch.no_grad():
+		for features, labels in test_loader:
+			features = features.to(device)
+			labels = labels.to(device)
+
+			logits = model(features)
+			loss = criterion(logits, labels)
+			predictions = logits.argmax(dim=1)
+
+			batch_size = labels.shape[0]
+			test_loss_total += loss.item() * batch_size
+			test_sample_count += batch_size
+			correct_predictions += (predictions == labels).sum().item()
+
+	accuracy = correct_predictions / test_sample_count
+	metrics = {
+		"loss": test_loss_total / test_sample_count,
+		"accuracy": accuracy,
+		"misclassification_error": 1.0 - accuracy,
+	}
+
+	print(f"Final Test Misclassification Error: {100 * metrics['misclassification_error']:.2f} %")
+	return metrics
+
+
 def prepare_dataloaders(config: NetworkConfig | None = None) -> tuple[DataLoader, DataLoader, DataLoader]:
 	config = config if config is not None else default_config()
 	seed_everything(config.seed)
