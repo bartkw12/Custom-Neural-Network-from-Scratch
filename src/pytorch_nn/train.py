@@ -33,6 +33,21 @@ def seed_everything(seed: int) -> None:
 	torch.backends.cudnn.benchmark = False
 
 
+def _learning_rate_decay_factor(iteration: int, decay: float) -> float:
+	return 1.0 / (1.0 + decay * iteration)
+
+
+def build_lr_scheduler(
+	optimizer: torch.optim.Optimizer,
+	config: NetworkConfig | None = None,
+) -> torch.optim.lr_scheduler.LambdaLR:
+	config = config if config is not None else default_config()
+	return torch.optim.lr_scheduler.LambdaLR(
+		optimizer,
+		lr_lambda=lambda iteration: _learning_rate_decay_factor(iteration, config.adam_decay),
+	)
+
+
 def _build_dataloader(
 	features: torch.Tensor,
 	labels: torch.Tensor,
