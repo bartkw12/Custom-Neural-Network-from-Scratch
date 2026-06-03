@@ -78,6 +78,70 @@ def _to_class_indices(labels: torch.Tensor) -> torch.Tensor:
 	return labels.argmax(dim=1).to(dtype=torch.int64)
 
 
+def train_model(
+	model: torch.nn.Module,
+	train_loader: DataLoader,
+	val_loader: DataLoader,
+	config: NetworkConfig | None = None,
+	device: torch.device | None = None,
+) -> dict[str, list[float]]:
+	config = config if config is not None else default_config()
+	device = device if device is not None else get_device()
+	model = model.to(device)
+
+	criterion = torch.nn.CrossEntropyLoss()
+	optimizer = build_optimizer(model.parameters(), config)
+	scheduler = build_lr_scheduler(optimizer, config)
+	history = {
+		"train_loss": [],
+		"val_loss": [],
+	}
+
+	for _ in range(config.epochs):
+		model.train()
+		train_loss_total = 0.0
+		train_sample_count = 0
+
+		for features, labels in train_loader:
+			features = features.to(device)
+			labels = labels.to(device)
+
+			optimizer.zero_grad(set_to_none=True)
+			logits = model(features)
+			loss = criterion(logits, labels)
+			loss.backward()
+			optimizer.step()
+			scheduler.step()
+
+			batch_size = labels.shape[0]
+			train_loss_total += loss.item() * batch_size
+			train_sample_count += batch_size
+
+		avg_train_loss = train_loss_total / train_sample_count
+
+		model.eval()
+		val_loss_total = 0.0
+		val_sample_count = 0
+
+		with torch.no_grad():
+			for features, labels in val_loader:
+				features = features.to(device)
+				labels = labels.to(device)
+
+				logits = model(features)
+				loss = criterion(logits, labels)
+
+				batch_size = labels.shape[0]
+				val_loss_total += loss.item() * batch_size
+				val_sample_count += batch_size
+
+		avg_val_loss = val_loss_total / val_sample_count
+		history["train_loss"].append(avg_train_loss)
+		history["val_loss"].append(avg_val_loss)
+
+	return history
+
+
 def prepare_dataloaders(config: NetworkConfig | None = None) -> tuple[DataLoader, DataLoader, DataLoader]:
 	config = config if config is not None else default_config()
 	seed_everything(config.seed)
