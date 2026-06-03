@@ -1,5 +1,6 @@
 """Training entry point for the PyTorch comparison implementation."""
 
+import copy
 import random
 
 import numpy as np
@@ -96,6 +97,9 @@ def train_model(
 		"train_loss": [],
 		"val_loss": [],
 	}
+	best_val_loss = float("inf")
+	best_state = None
+	wait = 0
 
 	for _ in range(config.epochs):
 		model.train()
@@ -138,6 +142,17 @@ def train_model(
 		avg_val_loss = val_loss_total / val_sample_count
 		history["train_loss"].append(avg_train_loss)
 		history["val_loss"].append(avg_val_loss)
+
+		if avg_val_loss < best_val_loss - config.min_delta:
+			best_val_loss = avg_val_loss
+			best_state = copy.deepcopy(model.state_dict())
+			wait = 0
+		else:
+			wait += 1
+			if wait >= config.patience:
+				if best_state is not None:
+					model.load_state_dict(best_state)
+				break
 
 	return history
 
