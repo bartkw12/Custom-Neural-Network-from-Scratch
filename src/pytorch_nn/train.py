@@ -1,7 +1,9 @@
 """Training entry point for the PyTorch comparison implementation."""
 
 import copy
+import json
 import random
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -194,6 +196,22 @@ def evaluate_test_set(
 
 	print(f"Final Test Misclassification Error: {100 * metrics['misclassification_error']:.2f} %")
 	return metrics
+
+
+def save_history(
+	history: dict[str, list[float]],
+	output_path: str | Path | None = None,
+) -> Path:
+	if output_path is None:
+		output_path = Path(__file__).resolve().parents[2] / "results" / "pytorch_history.json"
+	else:
+		output_path = Path(output_path)
+
+	output_path.parent.mkdir(parents=True, exist_ok=True)
+	with output_path.open("w", encoding="utf-8") as history_file:
+		json.dump(history, history_file, indent=2)
+
+	return output_path
 
 
 def prepare_dataloaders(config: NetworkConfig | None = None) -> tuple[DataLoader, DataLoader, DataLoader]:
