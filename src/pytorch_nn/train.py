@@ -48,6 +48,20 @@ def build_lr_scheduler(
 	)
 
 
+def build_optimizer(
+	parameters,
+	config: NetworkConfig | None = None,
+) -> torch.optim.Adam:
+	config = config if config is not None else default_config()
+	return torch.optim.Adam(
+		parameters,
+		lr=config.learning_rate,
+		betas=(config.adam_beta1, config.adam_beta2),
+		eps=config.adam_epsilon,
+		weight_decay=config.l2_lambda,
+	)
+
+
 def _build_dataloader(
 	features: torch.Tensor,
 	labels: torch.Tensor,
