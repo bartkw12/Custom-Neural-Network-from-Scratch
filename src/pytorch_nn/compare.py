@@ -14,16 +14,21 @@ def _load_history(history_path: str | Path) -> dict[str, list[float]]:
 		return json.load(history_file)
 
 
+def load_pytorch_history(history_path: str | Path | None = None) -> dict[str, list[float]]:
+	if history_path is None:
+		history_path = _results_dir() / "pytorch_history.json"
+
+	return _load_history(history_path)
+
+
 def load_comparison_histories(
 	custom_history_path: str | Path | None = None,
 	pytorch_history_path: str | Path | None = None,
 ) -> dict[str, dict[str, list[float]]]:
 	if custom_history_path is None:
 		custom_history_path = _results_dir() / "custom_nn_history.json"
-	if pytorch_history_path is None:
-		pytorch_history_path = _results_dir() / "pytorch_history.json"
 
 	return {
 		"custom_nn": _load_history(custom_history_path),
-		"pytorch_nn": _load_history(pytorch_history_path),
+		"pytorch_nn": load_pytorch_history(pytorch_history_path),
 	}
