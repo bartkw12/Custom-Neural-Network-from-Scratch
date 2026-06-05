@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import sys
 
@@ -20,6 +21,11 @@ def main():
     )
 
     history = model.train(X_train, Y_train, X_validation, Y_validation)
+    history_path = Path(__file__).resolve().parent / "results" / "custom_nn_history.json"
+    history_path.parent.mkdir(parents=True, exist_ok=True)
+    with history_path.open("w", encoding="utf-8") as history_file:
+        json.dump(history, history_file, indent=2)
+
     train_metrics = model.evaluate(X_train, Y_train)
     test_metrics = model.evaluate(X_test, Y_test)
 
