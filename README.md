@@ -19,6 +19,14 @@ The NN features the following techniques:
 - Early stopping
 - L2 regularization
 
+## Current Work
+
+This project is currently in the process of being refactored to include a PyTorch implementation of the same network architecture and training pipeline, allowing for direct comparison between the custom implementation and a standard deep learning framework.
+
+The training results will be posted here once the PyTorch implementation is complete and the training runs have been executed. 
+
+Let's see how the custom implementation stacks up against the PyTorch version in terms of training curves and final test performance!
+
 ## Training Results
 ![Training Curve](results/trainingcurve.JPG)
 
