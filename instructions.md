@@ -1,4 +1,4 @@
-# Running The PyTorch NN On A 3080 Ti
+# Running The PyTorch NN On A Dedicated GPU (3080 Ti)
 
 Yes. You can run this PyTorch implementation on a 3080 Ti.
 
