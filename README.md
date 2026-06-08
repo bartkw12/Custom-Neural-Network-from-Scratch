@@ -27,9 +27,10 @@ There is still potential for hyperparameter optimization.
 
 ## Requirements
 - Python 3.10+
-- NumPy
-- Matplotlib
-- PyTorch (for dataset loading)
+- numpy >= 1.24
+- matplotlib >= 3.7
+- torch >= 2.0
+- torchvision >= 0.15
 
 ## Installation
 ```bash
