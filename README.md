@@ -27,6 +27,14 @@ The training results will be posted here once the PyTorch implementation is comp
 
 Let's see how the custom implementation stacks up against the PyTorch version in terms of training curves and final test performance!
 
+## What's Implemented
+- packaged library under custom_nn
+- NetworkConfig for hyperparameters and architecture
+- NeuralNetwork training/evaluation API
+- Adam, batch normalization, dropout, L2 regularization, early stopping
+- save/load support
+- PyTorch comparison utilities under pytorch_nn
+
 ## Training Results
 ![Training Curve](results/trainingcurve.JPG)
 
