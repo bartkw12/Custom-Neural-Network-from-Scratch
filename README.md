@@ -88,6 +88,7 @@ Custom-Neural-Network-from-Scratch/
 │       ├── model.py              # Core layer and loss implementations
 │       ├── network.py            # NeuralNetwork class API
 │       └── techniques.py         # Optimization/regularization
+│   └── pytorch_nn/           # PyTorch implementation
 ├── train.py                      # Thin training entry point
 ├── pyproject.toml
 ├── requirements.txt
