@@ -48,13 +48,17 @@ There is still potential for hyperparameter optimization.
 - torch >= 2.0
 - torchvision >= 0.15
 
-## Installation
+## Installation and Running
 ```bash
 git clone https://github.com/bartkw12/Custom-Neural-Network-from-Scratch.git
 cd Custom-Neural-Network-from-Scratch
 pip install -r requirements.txt
 pip install -e .
 ```
+
+1. first downloads the Fashion MNIST dataset through torchvision
+2. training writes results/custom_nn_history.json
+3. training displays a Matplotlib loss plot and blocks until the window is closed
 
 ## Usage
 ```bash
