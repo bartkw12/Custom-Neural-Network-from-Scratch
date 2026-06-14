@@ -1,12 +1,12 @@
 # Custom Neural Network From Scratch
 
 ## Abstract
-This repository presents a fully connected neural network for Fashion-MNIST classification implemented from first principles in NumPy, with PyTorch used only for dataset loading in the custom pipeline. The project is structured as a reusable Python package and includes a parallel PyTorch implementation for architecture- and training-pipeline comparison.
+This repository presents a fully connected neural network for the Fashion-MNIST classification dataset, implemented from first principles in NumPy, with PyTorch used only for dataset loading in the custom pipeline. The project is structured as a reusable Python package and includes a parallel PyTorch implementation for architecture and training pipeline comparison.
 
 The current custom model supports mini-batch training with Adam optimization, L2 regularization, batch normalization, dropout, and early stopping. Hyperparameters and layer wiring are centralized through a typed `NetworkConfig` interface.
 
 ## Method Summary
-- `custom_nn`: the primary from-scratch implementation under `src/custom_nn`
+- `custom_nn`: the primary from scratch implementation under `src/custom_nn`
 - `NeuralNetwork`: reusable training, evaluation, prediction, save, and load API
 - `NetworkConfig`: centralized configuration for architecture and training behavior
 - `pytorch_nn`: reference implementation built around the same layer specification and preprocessing flow
@@ -55,7 +55,7 @@ metrics = model.evaluate(X_test, Y_test)
 ## Repository Layout
 ```text
 src/
-├── custom_nn/   NumPy-based neural network, training pipeline, and configuration
+├── custom_nn/   NumPy-based NN, training pipeline, and configuration
 └── pytorch_nn/  PyTorch reference model and comparison utilities
 train.py         Thin repository entry point for custom model training
 results/         Saved plots and training histories
