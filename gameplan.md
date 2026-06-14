@@ -36,13 +36,14 @@ Transform this from a class assignment into a polished portfolio piece that demo
 ## Phase 3: PyTorch Comparison Implementation
 > Build an equivalent model in PyTorch and compare results side-by-side.
 
-- [ ] Create `src/PyTorchNN/` directory with:
+- [x] Create `src/pytorch_nn/` package with:
   - `model.py` — PyTorch model matching the custom architecture (same layers, sizes, activations)
-  - `train.py` — training script using PyTorch's built-in optimizer, loss, etc.
+  - `train.py` — training helpers using PyTorch's built-in optimizer, loss, scheduler, and evaluation flow
+  - `compare.py` — history loading helpers for the comparison workflow
   - `__init__.py`
-- [ ] Use identical hyperparameters (learning rate, batch size, epochs, etc.)
-- [ ] Use identical data splits (same seed, same preprocessing pipeline)
-- [ ] Log training/validation loss per epoch for both implementations
+- [x] Use identical hyperparameters (learning rate, batch size, epochs, etc.)
+- [x] Use identical data splits (same seed, same preprocessing pipeline)
+- [x] Log training/validation loss per epoch for both implementations
 - [ ] Generate comparison plots:
   - Training loss curves (both on same plot)
   - Validation loss curves (both on same plot)
@@ -115,7 +116,7 @@ Transform this from a class assignment into a polished portfolio piece that demo
 |-------|--------|--------|--------|
 | 1. Structural Cleanup | Medium | Low | Completed |
 | 2. Refactor to Class API | High | Medium | Completed |
-| 3. PyTorch Comparison | Very High | Medium | Not Started |
+| 3. PyTorch Comparison | Very High | Medium | In Progress |
 | 4. Testing & Validation | High | Medium | Not Started |
 | 5. CLI & Experiments | Medium | Low | Not Started |
 | 6. Visualization | High | Low | Not Started |
@@ -130,5 +131,10 @@ Transform this from a class assignment into a polished portfolio piece that demo
 - For Phase 3, reuse the exact same preprocessed train/validation/test split for both implementations instead of preprocessing separately, otherwise the comparison will not be truly apples-to-apples
 - `results/` has replaced `images/` as the output directory; future plots, checkpoints, and comparison tables should land there
 - `NetworkConfig` currently coexists with legacy module-level constants in `config.py`; Phase 3 code should prefer the config object to avoid reintroducing global wiring
+- Phase 3 is now partially implemented: `src/pytorch_nn/` exists and exposes a PyTorch model, shared-data training helpers, history saving, test evaluation, and comparison-history loading
+- The PyTorch implementation currently mirrors the custom config surface: same architecture shape, same seed, same preprocessing pipeline, same batch size, same learning rate, same ADAM betas/epsilon/weight decay, and per-batch learning-rate decay
+- The PyTorch training path auto-detects `cuda`, then `mps`, then `cpu`, so dedicated GPU training is supported when PyTorch is installed with CUDA support
+- The custom training entry point now writes `results/custom_nn_history.json`, and the PyTorch helpers write `results/pytorch_history.json`, so the data needed for side-by-side plotting is available
+- Remaining Phase 3 work is the actual visualization/reporting layer: generate overlaid loss plots, produce a final accuracy comparison artifact, and add a cleaner top-level PyTorch run entry point if desired
 - Phase 4 is what separates this from "followed a tutorial"
 - Phases can overlap (e.g., write docs as you build each feature)
