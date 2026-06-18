@@ -4,7 +4,14 @@ import numpy as np
 
 from custom_nn import NeuralNetwork, NetworkConfig
 
-from tests.helpers import as_float64, finite_difference_gradient, one_hot
+from tests.helpers import (
+    as_float64,
+    build_batch_norm_test_config,
+    build_dense_relu_test_config,
+    build_linear_test_config,
+    finite_difference_gradient,
+    one_hot,
+)
 
 
 def test_custom_nn_imports_are_available() -> None:
@@ -25,3 +32,36 @@ def test_helper_utilities_return_expected_shapes() -> None:
 
     assert encoded.shape == (3, 3)
     assert gradient.shape == (1, 2)
+
+
+def test_tiny_float64_batches_are_ready_for_math_checks(tiny_batch, probe_batch) -> None:
+    inputs, labels = tiny_batch
+
+    assert inputs.dtype == np.float64
+    assert labels.dtype == np.float64
+    assert inputs.shape == (4, 3)
+    assert labels.shape == (4, 2)
+    assert probe_batch.dtype == np.float64
+    assert probe_batch.shape == (2, 3)
+
+
+def test_reduced_config_factories_create_narrow_architectures() -> None:
+    linear_config = build_linear_test_config()
+    dense_relu_config = build_dense_relu_test_config()
+    batch_norm_config = build_batch_norm_test_config()
+
+    assert linear_config.get_layer_specs() == [
+        {"type": "dense", "n_inputs": 3, "n_neurons": 2, "l2_lambda": 0.0},
+        {"type": "softmax"},
+    ]
+    assert [spec["type"] for spec in dense_relu_config.get_layer_specs()] == ["dense", "relu", "dense", "softmax"]
+    assert [spec["type"] for spec in batch_norm_config.get_layer_specs()] == ["dense", "batch_norm", "relu", "dense", "softmax"]
+
+
+def test_reduced_fixture_config_can_drive_small_network(reduced_network_config, tiny_batch) -> None:
+    model = NeuralNetwork(reduced_network_config)
+    inputs, _ = tiny_batch
+
+    outputs = model.forward(inputs, training=False)
+
+    assert outputs.shape == (4, 2)
