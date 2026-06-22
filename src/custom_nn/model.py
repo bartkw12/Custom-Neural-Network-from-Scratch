@@ -95,7 +95,8 @@ class Activation_Softmax:
 
         # this backwards pass simplifies with the categorical cross entropy loss backwards pass
         # Gradient of the loss with respect to the inputs
-        self.dinputs = self.output - y_true
+        samples = y_true.shape[0]
+        self.dinputs = (self.output - y_true) / samples
 
         return self.dinputs
 
