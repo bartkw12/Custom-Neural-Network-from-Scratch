@@ -2,13 +2,19 @@ from __future__ import annotations
 
 import numpy as np
 
-from custom_nn.model import Layer_Dense
+from custom_nn.model import Activation_ReLU, Layer_Dense
 
 from tests.helpers import as_float64, finite_difference_gradient, relative_error
 
 
 def _dense_objective(layer: Layer_Dense, inputs: np.ndarray, upstream_gradient: np.ndarray) -> float:
     outputs = layer.forward(inputs)
+    return float(np.sum(outputs * upstream_gradient))
+
+
+def _relu_objective(inputs: np.ndarray, upstream_gradient: np.ndarray) -> float:
+    activation = Activation_ReLU()
+    outputs = activation.forward(inputs)
     return float(np.sum(outputs * upstream_gradient))
 
 
@@ -108,6 +114,38 @@ def test_dense_backward_adds_expected_l2_weight_term() -> None:
         rtol=1e-10,
         atol=1e-12,
     )
+
+
+def test_relu_backward_matches_numeric_gradient(float_tolerance) -> None:
+    inputs = as_float64(
+        np.array(
+            [
+                [0.8, -1.2, 0.35],
+                [-0.45, 1.1, -0.9],
+                [1.5, 0.6, -0.25],
+            ]
+        )
+    )
+    upstream_gradient = as_float64(
+        np.array(
+            [
+                [0.4, -0.7, 0.2],
+                [0.9, 0.3, -0.5],
+                [-0.6, 0.8, 0.1],
+            ]
+        )
+    )
+
+    activation = Activation_ReLU()
+    activation.forward(inputs)
+    activation.backward(upstream_gradient)
+
+    numeric_dinputs = finite_difference_gradient(
+        lambda values: _relu_objective(values, upstream_gradient),
+        inputs,
+    )
+
+    assert relative_error(activation.dinputs, numeric_dinputs) < float_tolerance["rtol"]
 
 
 def _layer_with(layer: Layer_Dense, *, weights: np.ndarray | None = None, biases: np.ndarray | None = None) -> Layer_Dense:
