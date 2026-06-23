@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from custom_nn.model import Activation_ReLU, Layer_Dense
+from custom_nn.model import Activation_ReLU, Activation_Softmax, Categorical_Cross_entropy_loss, Layer_Dense
 
 from tests.helpers import as_float64, finite_difference_gradient, relative_error
 
@@ -16,6 +16,13 @@ def _relu_objective(inputs: np.ndarray, upstream_gradient: np.ndarray) -> float:
     activation = Activation_ReLU()
     outputs = activation.forward(inputs)
     return float(np.sum(outputs * upstream_gradient))
+
+
+def _softmax_cross_entropy_objective(logits: np.ndarray, y_true: np.ndarray) -> float:
+    activation = Activation_Softmax()
+    loss = Categorical_Cross_entropy_loss(l2_lambda=0.0)
+    probabilities = activation.forward(logits)
+    return float(loss.forward(probabilities, y_true))
 
 
 def test_dense_backward_matches_numeric_gradients_without_regularization(float_tolerance) -> None:
@@ -146,6 +153,40 @@ def test_relu_backward_matches_numeric_gradient(float_tolerance) -> None:
     )
 
     assert relative_error(activation.dinputs, numeric_dinputs) < float_tolerance["rtol"]
+
+
+def test_softmax_cross_entropy_backward_matches_numeric_gradient(float_tolerance) -> None:
+    logits = as_float64(
+        np.array(
+            [
+                [1.2, -0.4, 0.3],
+                [-0.7, 0.9, 0.1],
+                [0.25, -1.1, 1.4],
+            ]
+        )
+    )
+    y_true = as_float64(
+        np.array(
+            [
+                [1.0, 0.0, 0.0],
+                [0.0, 1.0, 0.0],
+                [0.0, 0.0, 1.0],
+            ]
+        )
+    )
+
+    activation = Activation_Softmax()
+    probabilities = activation.forward(logits)
+    loss = Categorical_Cross_entropy_loss(l2_lambda=0.0)
+    loss.forward(probabilities, y_true)
+    activation.backward(y_true)
+
+    numeric_dlogits = finite_difference_gradient(
+        lambda values: _softmax_cross_entropy_objective(values, y_true),
+        logits,
+    )
+
+    assert relative_error(activation.dinputs, numeric_dlogits) < float_tolerance["rtol"]
 
 
 def _layer_with(layer: Layer_Dense, *, weights: np.ndarray | None = None, biases: np.ndarray | None = None) -> Layer_Dense:
