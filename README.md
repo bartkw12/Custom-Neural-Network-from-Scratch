@@ -5,6 +5,18 @@ This repository presents a fully connected neural network for the Fashion-MNIST 
 
 The current custom model supports mini-batch training with Adam optimization, L2 regularization, batch normalization, dropout, and early stopping. Hyperparameters and layer wiring are centralized through a typed `NetworkConfig` interface.
 
+## Why Build a Neural Network From Scratch?
+
+High-level ML libraries make it easy to train models, but they hide the numerical and architectural details that make neural networks work. This project was built to demonstrate a deeper understanding of:
+
+- how tensors flow through a network during forward propagation
+- how gradients are derived and propagated during backpropagation
+- how optimizers such as Adam update parameters
+- how dropout, batch normalization, and L2 regularization affect training
+- how train/validation/test preprocessing should be structured to avoid data leakage
+- how a custom implementation can be compared against a framework implementation
+
+
 ## Method Summary
 - `custom_nn`: the primary from scratch implementation under `src/custom_nn`
 - `NeuralNetwork`: reusable training, evaluation, prediction, save, and load API
