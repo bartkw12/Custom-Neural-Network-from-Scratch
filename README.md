@@ -16,6 +16,25 @@ High-level ML libraries make it easy to train models, but they hide the numerica
 - how train/validation/test preprocessing should be structured to avoid data leakage
 - how a custom implementation can be compared against a framework implementation
 
+## Features
+
+
+### Custom NumPy Implementation
+
+- Fully connected dense layers
+- ReLU activation
+- Softmax classification output
+- Cross-entropy loss
+- Manual backpropagation
+- Mini-batch training
+- Adam optimizer
+- L2 regularization
+- Dropout using inverted dropout scaling
+- Batch normalization
+- Early stopping
+- Model evaluation and prediction API
+- Save/load support for trained parameters
+
 
 ## Method Summary
 - `custom_nn`: the primary from scratch implementation under `src/custom_nn`
