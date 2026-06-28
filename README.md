@@ -36,6 +36,17 @@ High-level ML libraries make it easy to train models, but they hide the numerica
 - Save/load support for trained parameters
 
 
+### PyTorch Reference Implementation
+
+- Equivalent architecture for comparison
+- Same Fashion-MNIST preprocessing pipeline
+- Same train/validation/test split
+- Matching hyperparameters where possible
+- Training and validation history logging
+- Test accuracy comparison
+
+
+
 ## Method Summary
 - `custom_nn`: the primary from scratch implementation under `src/custom_nn`
 - `NeuralNetwork`: reusable training, evaluation, prediction, save, and load API
