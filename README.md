@@ -63,6 +63,25 @@ High-level ML libraries make it easy to train models, but they hide the numerica
 - `pytorch_nn`: reference implementation built around the same layer specification and preprocessing flow
 - shared Fashion-MNIST preprocessing: shuffle, train/validation split, one-hot encoding, and standardization from training statistics only
 
+## Model Architecture
+
+The default custom network is a fully connected classifier for flattened Fashion-MNIST images.
+
+```text
+Input: 28 × 28 grayscale image
+Flatten: 784 features
+Dense Layer: [PLACEHOLDER: hidden units]
+Batch Normalization
+ReLU
+Dropout
+Dense Layer: [PLACEHOLDER: hidden units]
+Batch Normalization
+ReLU
+Dropout
+Output Dense Layer: 10 classes
+Softmax + Cross-Entropy Loss.
+```
+
 ## Training Result
 ![Training Curve](results/trainingcurve.JPG)
 
