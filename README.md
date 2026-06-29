@@ -46,6 +46,15 @@ High-level ML libraries make it easy to train models, but they hide the numerica
 - Test accuracy comparison
 
 
+### Planned / In Progress
+
+- Gradient checking tests
+- Confusion matrix visualization
+- Per-class accuracy analysis
+- Custom-vs-PyTorch loss curve overlays
+- CLI-based experiment configuration
+
+
 
 ## Method Summary
 - `custom_nn`: the primary from scratch implementation under `src/custom_nn`
