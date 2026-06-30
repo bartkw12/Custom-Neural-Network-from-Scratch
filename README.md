@@ -63,6 +63,21 @@ High-level ML libraries make it easy to train models, but they hide the numerica
 - `pytorch_nn`: reference implementation built around the same layer specification and preprocessing flow
 - shared Fashion-MNIST preprocessing: shuffle, train/validation split, one-hot encoding, and standardization from training statistics only
 
+## Training Pipeline
+
+The training pipeline follows these steps:
+
+1. Load Fashion-MNIST using `torchvision`.
+2. Convert images and labels into NumPy arrays.
+3. Shuffle the training set using a fixed random seed.
+4. Split the original training set into training and validation subsets.
+5. One-hot encode labels.
+6. Standardize features using statistics computed from the training set only.
+7. Train the custom NumPy network using mini-batch gradient descent with Adam.
+8. Track training and validation loss across epochs.
+9. Apply early stopping based on validation performance.
+10. Evaluate the final model on the held-out test set.
+
 ## Model Architecture
 
 The default custom network is a fully connected classifier for flattened Fashion-MNIST images.
