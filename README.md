@@ -102,6 +102,16 @@ Softmax + Cross-Entropy Loss.
 
 The plot above is retained from the current repository results. Training history from the custom implementation is also written to `results/custom_nn_history.json` for later inspection.
 
+
+## Mathematical Overview
+
+This implementation manually computes all forward and backward operations.
+
+### Dense Layer
+
+Forward pass:
+
+
 ## Installation
 ```bash
 git clone https://github.com/bartkw12/Custom-Neural-Network-from-Scratch.git
