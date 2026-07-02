@@ -128,6 +128,21 @@ Backward pass:
 \frac{\partial L}{\partial X} = \frac{\partial L}{\partial Z} W^T
 ```
 
+### ReLU Activation
+```math
+\text{ReLU}(x) = \max(0, x)
+```
+
+### Softmax Activation
+```math
+\hat{y}_i = \frac{e^{z_i}}{\sum_j e^{z_j}}
+```
+
+### Cross-Entropy Loss
+```math
+L = -\sum_i y_i \log \hat{y}_i
+```
+
 
 ## Installation
 ```bash
