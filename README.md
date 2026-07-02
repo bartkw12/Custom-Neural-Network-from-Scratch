@@ -111,6 +111,23 @@ This implementation manually computes all forward and backward operations.
 
 Forward pass:
 
+```math
+Z = XW + b
+```
+
+Backward pass:
+```math
+\frac{\partial L}{\partial W} = X^T \frac{\partial L}{\partial Z}
+```
+
+```math
+\frac{\partial L}{\partial b} = \sum_i \frac{\partial L}{\partial Z_i}
+```
+
+```math
+\frac{\partial L}{\partial X} = \frac{\partial L}{\partial Z} W^T
+```
+
 
 ## Installation
 ```bash
