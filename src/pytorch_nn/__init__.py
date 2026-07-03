@@ -1,6 +1,5 @@
 """PyTorch comparison package."""
 
-from .compare import load_comparison_histories, load_pytorch_history
 from .model import FashionMNISTNet
 from .train import (
 	build_lr_scheduler,
@@ -12,6 +11,18 @@ from .train import (
 	seed_everything,
 	train_model,
 )
+
+
+def load_pytorch_history(history_path=None):
+	from .compare import load_pytorch_history as _load_pytorch_history
+
+	return _load_pytorch_history(history_path)
+
+
+def load_comparison_histories(custom_history_path=None, pytorch_history_path=None):
+	from .compare import load_comparison_histories as _load_comparison_histories
+
+	return _load_comparison_histories(custom_history_path, pytorch_history_path)
 
 __all__ = [
 	"FashionMNISTNet",
