@@ -189,3 +189,5 @@ results/         Saved plots and training histories
 data/            Fashion-MNIST download cache
 ```
 
+add future work section
+
