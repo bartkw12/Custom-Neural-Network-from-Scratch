@@ -1,0 +1,9 @@
+generate the comparison artifacts with:
+
+.\.venv\Scripts\python.exe -m pytorch_nn.compare --custom-test-error 12.44 --pytorch-test-error 12.64
+
+After running the compare command, verify the outputs:
+
+Get-ChildItem .\results\comparison_*
+
+At that point, the final Phase 3 checkbox is functionally complete.
