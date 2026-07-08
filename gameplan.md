@@ -49,6 +49,8 @@ Transform this from a class assignment into a polished portfolio piece that demo
   - Validation loss curves (both on same plot)
   - Final test accuracy table
 
+Final generation notes in Phase 3 Implementation chat. 
+
 ---
 
 ## Phase 4: Testing & Correctness Validation
