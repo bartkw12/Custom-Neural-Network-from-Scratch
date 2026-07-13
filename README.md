@@ -188,6 +188,3 @@ train.py         Thin repository entry point for custom model training
 results/         Saved plots and training histories
 data/            Fashion-MNIST download cache
 ```
-
-add future work section
-
