@@ -56,19 +56,19 @@ Final generation notes in Phase 3 Implementation chat.
 ## Phase 4: Testing & Correctness Validation
 > Prove the math is correct with automated tests.
 
-- [ ] Create `tests/` directory with pytest structure
-- [ ] Add gradient checking tests (finite difference vs. analytic gradients) for:
+- [x] Create `tests/` directory with pytest structure
+- [x] Add gradient checking tests (finite difference vs. analytic gradients) for:
   - Dense layer (weights, biases)
   - ReLU backward
   - Softmax + Cross-entropy backward
   - Batch Normalization backward (gamma, beta, inputs)
-- [ ] Add unit tests for:
+- [x] Add unit tests for:
   - Forward pass output shapes
   - Dropout mask behavior (training vs. inference)
   - Early stopping trigger logic
   - ADAM optimizer parameter updates
-- [ ] Add integration test: train for 2 epochs, verify loss decreases
-- [ ] Add PyTorch vs. Custom comparison test (same input → similar output within tolerance)
+- [x] Add integration test: train for 2 epochs, verify loss decreases
+- [x] Add PyTorch vs. Custom comparison test (same input → similar output within tolerance)
 
 ---
 
@@ -119,7 +119,7 @@ Final generation notes in Phase 3 Implementation chat.
 | 1. Structural Cleanup | Medium | Low | Completed |
 | 2. Refactor to Class API | High | Medium | Completed |
 | 3. PyTorch Comparison | Very High | Medium | In Progress |
-| 4. Testing & Validation | High | Medium | Not Started |
+| 4. Testing & Validation | High | Medium | Completed |
 | 5. CLI & Experiments | Medium | Low | Not Started |
 | 6. Visualization | High | Low | Not Started |
 | 7. Documentation & README | Very High | Medium | Not Started |
