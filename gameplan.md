@@ -139,4 +139,8 @@ Final generation notes in Phase 3 Implementation chat.
 - The custom training entry point now writes `results/custom_nn_history.json`, and the PyTorch helpers write `results/pytorch_history.json`, so the data needed for side-by-side plotting is available
 - Remaining Phase 3 work is the actual visualization/reporting layer: generate overlaid loss plots, produce a final accuracy comparison artifact, and add a cleaner top-level PyTorch run entry point if desired
 - Phase 4 is what separates this from "followed a tutorial"
+- Phase 4 completion notes:
+  - Added deterministic pytest coverage for gradient correctness (Dense, ReLU, Softmax+Cross-entropy, BatchNorm), technique behavior (Dropout, Early Stopping, ADAM), integration behavior, and custom-vs-PyTorch parity.
+  - Gradient validation exposed and fixed a real issue in softmax backward scaling to match mean cross-entropy loss semantics.
+  - Full local suite currently passes (`python -m pytest tests -q`), so Phase 4 is complete and the project is ready to move to Phase 5.
 - Phases can overlap (e.g., write docs as you build each feature)
