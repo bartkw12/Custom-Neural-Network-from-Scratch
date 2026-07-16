@@ -1,14 +1,25 @@
-from pathlib import Path
-import runpy
+import sys
+
+from .cli import main as cli_main
 
 
-def main():
-    train_script = Path(__file__).resolve().parents[2] / "train.py"
-    if not train_script.exists():
-        raise FileNotFoundError(f"Could not find training entry point at {train_script}")
+_KNOWN_SUBCOMMANDS = {"custom", "pytorch", "compare"}
 
-    runpy.run_path(str(train_script), run_name="__main__")
+
+def _compat_argv(argv: list[str]) -> list[str]:
+    if not argv:
+        return ["custom"]
+
+    if argv[0] in _KNOWN_SUBCOMMANDS:
+        return argv
+
+    return ["custom", *argv]
+
+
+def main(argv: list[str] | None = None) -> int:
+    arguments = sys.argv[1:] if argv is None else argv
+    return cli_main(_compat_argv(arguments))
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
