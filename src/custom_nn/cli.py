@@ -5,15 +5,19 @@ from __future__ import annotations
 import argparse
 import json
 from dataclasses import asdict
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+import uuid
+
+from torch.utils.data import DataLoader
 
 from custom_nn.config import NetworkConfig, default_config
 from custom_nn.data_preprocessing import load_fashion_MNIST, preprocess_data
 from custom_nn.network import NeuralNetwork
 from pytorch_nn.compare import generate_comparison_artifacts
 from pytorch_nn.model import FashionMNISTNet
-from pytorch_nn.train import evaluate_test_set, prepare_dataloaders, save_history, train_model
+from pytorch_nn.train import evaluate_split, evaluate_test_set, prepare_dataloaders, save_history, train_model
 
 
 def _repo_root() -> Path:
@@ -22,6 +26,97 @@ def _repo_root() -> Path:
 
 def _results_dir() -> Path:
     return _repo_root() / "results"
+
+
+def _json_safe(value: Any) -> Any:
+    if isinstance(value, Path):
+        return str(value)
+
+    if isinstance(value, dict):
+        return {key: _json_safe(item) for key, item in value.items()}
+
+    if isinstance(value, list):
+        return [_json_safe(item) for item in value]
+
+    return value
+
+
+def _build_run_identity(backend: str) -> tuple[str, str]:
+    timestamp_utc = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    run_id = f"{backend}-{timestamp_utc}-{uuid.uuid4().hex[:8]}"
+    return run_id, timestamp_utc
+
+
+def _run_paths(backend: str, run_id: str) -> dict[str, Path]:
+    results_root = _results_dir()
+    latest_dir = results_root / "latest" / backend
+    archive_dir = results_root / "runs" / run_id / backend
+
+    latest_dir.mkdir(parents=True, exist_ok=True)
+    archive_dir.mkdir(parents=True, exist_ok=True)
+
+    return {
+        "latest_dir": latest_dir,
+        "archive_dir": archive_dir,
+        "latest_summary": latest_dir / "run_summary.json",
+        "archive_summary": archive_dir / "run_summary.json",
+        "latest_history": latest_dir / "history.json",
+        "archive_history": archive_dir / "history.json",
+    }
+
+
+def _write_json(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as output_file:
+        json.dump(_json_safe(payload), output_file, indent=2)
+
+
+def _persist_run_artifacts(
+    *,
+    backend: str,
+    args: argparse.Namespace,
+    config: NetworkConfig,
+    history: dict[str, list[float]],
+    metrics: dict[str, dict[str, float]],
+) -> dict[str, Any]:
+    run_id, timestamp_utc = _build_run_identity(backend)
+    paths = _run_paths(backend, run_id)
+
+    summary = {
+        "run_id": run_id,
+        "backend": backend,
+        "created_at_utc": timestamp_utc,
+        "config": asdict(config),
+        "history": history,
+        "metrics": metrics,
+        "cli_args": {
+            key: _json_safe(value)
+            for key, value in vars(args).items()
+            if key != "handler"
+        },
+    }
+
+    _write_json(paths["latest_summary"], summary)
+    _write_json(paths["archive_summary"], summary)
+    _write_json(paths["latest_history"], history)
+    _write_json(paths["archive_history"], history)
+
+    return {
+        "run_id": run_id,
+        "latest_summary": paths["latest_summary"],
+        "archive_summary": paths["archive_summary"],
+        "latest_history": paths["latest_history"],
+        "archive_history": paths["archive_history"],
+    }
+
+
+def _build_eval_loader(data_loader: DataLoader, *, batch_size: int) -> DataLoader:
+    return DataLoader(
+        data_loader.dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        drop_last=False,
+    )
 
 
 def _load_json_config(config_path: str | Path | None) -> dict[str, Any]:
@@ -97,9 +192,24 @@ def _run_custom(args: argparse.Namespace) -> int:
         json.dump(history, history_file, indent=2)
 
     train_metrics = model.evaluate(x_train, y_train)
+    val_metrics = model.evaluate(x_val, y_val)
     test_metrics = model.evaluate(x_test, y_test)
+    artifacts = _persist_run_artifacts(
+        backend="custom",
+        args=args,
+        config=config,
+        history=history,
+        metrics={
+            "train": train_metrics,
+            "val": val_metrics,
+            "test": test_metrics,
+        },
+    )
 
     print(f"history_path: {args.save_path}")
+    print(f"run_id: {artifacts['run_id']}")
+    print(f"latest_summary_path: {artifacts['latest_summary']}")
+    print(f"archive_summary_path: {artifacts['archive_summary']}")
     print(f"Final Training Misclassification Error: {100 * (1.0 - train_metrics['accuracy']):.2f} %")
     print(f"Final Test Misclassification Error: {100 * (1.0 - test_metrics['accuracy']):.2f} %")
     return 0
@@ -112,10 +222,29 @@ def _run_pytorch(args: argparse.Namespace) -> int:
     model = FashionMNISTNet(config)
     history = train_model(model, train_loader, val_loader, config)
     save_history(history, args.save_path)
-    metrics = evaluate_test_set(model, test_loader)
+    train_eval_loader = _build_eval_loader(train_loader, batch_size=config.batch_size)
+    val_eval_loader = _build_eval_loader(val_loader, batch_size=config.batch_size)
+
+    train_metrics = evaluate_split(model, train_eval_loader)
+    val_metrics = evaluate_split(model, val_eval_loader)
+    test_metrics = evaluate_test_set(model, test_loader)
+    artifacts = _persist_run_artifacts(
+        backend="pytorch",
+        args=args,
+        config=config,
+        history=history,
+        metrics={
+            "train": train_metrics,
+            "val": val_metrics,
+            "test": test_metrics,
+        },
+    )
 
     print(f"history_path: {args.save_path}")
-    print(f"Final Test Misclassification Error: {100 * metrics['misclassification_error']:.2f} %")
+    print(f"run_id: {artifacts['run_id']}")
+    print(f"latest_summary_path: {artifacts['latest_summary']}")
+    print(f"archive_summary_path: {artifacts['archive_summary']}")
+    print(f"Final Test Misclassification Error: {100 * test_metrics['misclassification_error']:.2f} %")
     return 0
 
 
