@@ -98,6 +98,7 @@ def train_model(
 	history = {
 		"train_loss": [],
 		"val_loss": [],
+		"learning_rate": [],
 	}
 	best_val_loss = float("inf")
 	best_state = None
@@ -144,6 +145,7 @@ def train_model(
 		avg_val_loss = val_loss_total / val_sample_count
 		history["train_loss"].append(avg_train_loss)
 		history["val_loss"].append(avg_val_loss)
+		history["learning_rate"].append(float(optimizer.param_groups[0]["lr"]))
 
 		if avg_val_loss < best_val_loss - config.min_delta:
 			best_val_loss = avg_val_loss
