@@ -117,6 +117,7 @@ class NeuralNetwork:
         history = {
             "train_loss": [],
             "val_loss": [],
+            "learning_rate": [],
         }
 
         for epoch in range(self.config.epochs):
@@ -149,6 +150,7 @@ class NeuralNetwork:
 
             history["train_loss"].append(avg_train_loss)
             history["val_loss"].append(val_loss)
+            history["learning_rate"].append(float(self.optimizer.current_learning_rate))
 
             stop = self.early_stopper.forward(val_loss, self.layers)
             if stop:
