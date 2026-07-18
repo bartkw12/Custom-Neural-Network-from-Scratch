@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 from dataclasses import asdict
 from datetime import datetime, timezone
@@ -60,8 +61,12 @@ def _run_paths(backend: str, run_id: str) -> dict[str, Path]:
         "archive_dir": archive_dir,
         "latest_summary": latest_dir / "run_summary.json",
         "archive_summary": archive_dir / "run_summary.json",
+        "latest_structured_json": latest_dir / "metrics.json",
+        "archive_structured_json": archive_dir / "metrics.json",
         "latest_history": latest_dir / "history.json",
         "archive_history": archive_dir / "history.json",
+        "latest_history_csv": latest_dir / "history.csv",
+        "archive_history_csv": archive_dir / "history.csv",
     }
 
 
@@ -69,6 +74,43 @@ def _write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as output_file:
         json.dump(_json_safe(payload), output_file, indent=2)
+
+
+def _history_rows(
+    history: dict[str, list[float]],
+    metrics: dict[str, dict[str, float]],
+) -> list[dict[str, Any]]:
+    train_loss = history.get("train_loss", [])
+    val_loss = history.get("val_loss", [])
+    learning_rate = history.get("learning_rate", [])
+
+    epoch_count = max(len(train_loss), len(val_loss), len(learning_rate))
+    final_train_accuracy = metrics.get("train", {}).get("accuracy")
+    final_val_accuracy = metrics.get("val", {}).get("accuracy")
+
+    rows: list[dict[str, Any]] = []
+    for epoch_index in range(epoch_count):
+        rows.append(
+            {
+                "epoch": epoch_index + 1,
+                "train_loss": train_loss[epoch_index] if epoch_index < len(train_loss) else "",
+                "val_loss": val_loss[epoch_index] if epoch_index < len(val_loss) else "",
+                "train_accuracy": final_train_accuracy if final_train_accuracy is not None else "",
+                "val_accuracy": final_val_accuracy if final_val_accuracy is not None else "",
+                "learning_rate": learning_rate[epoch_index] if epoch_index < len(learning_rate) else "",
+            }
+        )
+
+    return rows
+
+
+def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    columns = ["epoch", "train_loss", "val_loss", "train_accuracy", "val_accuracy", "learning_rate"]
+    with path.open("w", encoding="utf-8", newline="") as output_file:
+        writer = csv.DictWriter(output_file, fieldnames=columns)
+        writer.writeheader()
+        writer.writerows(rows)
 
 
 def _persist_run_artifacts(
@@ -95,18 +137,27 @@ def _persist_run_artifacts(
             if key != "handler"
         },
     }
+    csv_rows = _history_rows(history, metrics)
 
     _write_json(paths["latest_summary"], summary)
     _write_json(paths["archive_summary"], summary)
+    _write_json(paths["latest_structured_json"], summary)
+    _write_json(paths["archive_structured_json"], summary)
     _write_json(paths["latest_history"], history)
     _write_json(paths["archive_history"], history)
+    _write_csv(paths["latest_history_csv"], csv_rows)
+    _write_csv(paths["archive_history_csv"], csv_rows)
 
     return {
         "run_id": run_id,
         "latest_summary": paths["latest_summary"],
         "archive_summary": paths["archive_summary"],
+        "latest_structured_json": paths["latest_structured_json"],
+        "archive_structured_json": paths["archive_structured_json"],
         "latest_history": paths["latest_history"],
         "archive_history": paths["archive_history"],
+        "latest_history_csv": paths["latest_history_csv"],
+        "archive_history_csv": paths["archive_history_csv"],
     }
 
 
@@ -210,6 +261,8 @@ def _run_custom(args: argparse.Namespace) -> int:
     print(f"run_id: {artifacts['run_id']}")
     print(f"latest_summary_path: {artifacts['latest_summary']}")
     print(f"archive_summary_path: {artifacts['archive_summary']}")
+    print(f"latest_csv_path: {artifacts['latest_history_csv']}")
+    print(f"archive_csv_path: {artifacts['archive_history_csv']}")
     print(f"Final Training Misclassification Error: {100 * (1.0 - train_metrics['accuracy']):.2f} %")
     print(f"Final Test Misclassification Error: {100 * (1.0 - test_metrics['accuracy']):.2f} %")
     return 0
@@ -244,6 +297,8 @@ def _run_pytorch(args: argparse.Namespace) -> int:
     print(f"run_id: {artifacts['run_id']}")
     print(f"latest_summary_path: {artifacts['latest_summary']}")
     print(f"archive_summary_path: {artifacts['archive_summary']}")
+    print(f"latest_csv_path: {artifacts['latest_history_csv']}")
+    print(f"archive_csv_path: {artifacts['archive_history_csv']}")
     print(f"Final Test Misclassification Error: {100 * test_metrics['misclassification_error']:.2f} %")
     return 0
 
