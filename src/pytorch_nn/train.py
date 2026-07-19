@@ -158,6 +158,9 @@ def train_model(
 					model.load_state_dict(best_state)
 				break
 
+	if best_state is not None:
+		model.load_state_dict(best_state)
+
 	return history
 
 
