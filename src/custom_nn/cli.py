@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 import uuid
 
+import torch
 from torch.utils.data import DataLoader
 
 from custom_nn.config import NetworkConfig, default_config
@@ -56,6 +57,8 @@ def _run_paths(backend: str, run_id: str) -> dict[str, Path]:
     latest_dir.mkdir(parents=True, exist_ok=True)
     archive_dir.mkdir(parents=True, exist_ok=True)
 
+    checkpoint_extension = ".npz" if backend == "custom" else ".pt"
+
     return {
         "latest_dir": latest_dir,
         "archive_dir": archive_dir,
@@ -67,6 +70,8 @@ def _run_paths(backend: str, run_id: str) -> dict[str, Path]:
         "archive_history": archive_dir / "history.json",
         "latest_history_csv": latest_dir / "history.csv",
         "archive_history_csv": archive_dir / "history.csv",
+        "latest_checkpoint": latest_dir / f"best_checkpoint{checkpoint_extension}",
+        "archive_checkpoint": archive_dir / f"best_checkpoint{checkpoint_extension}",
     }
 
 
@@ -113,6 +118,15 @@ def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         writer.writerows(rows)
 
 
+def _best_validation_info(history: dict[str, list[float]]) -> tuple[int | None, float | None]:
+    val_loss = history.get("val_loss", [])
+    if not val_loss:
+        return None, None
+
+    best_index = min(range(len(val_loss)), key=lambda index: val_loss[index])
+    return best_index + 1, float(val_loss[best_index])
+
+
 def _persist_run_artifacts(
     *,
     backend: str,
@@ -123,11 +137,18 @@ def _persist_run_artifacts(
 ) -> dict[str, Any]:
     run_id, timestamp_utc = _build_run_identity(backend)
     paths = _run_paths(backend, run_id)
+    best_epoch, best_val_loss = _best_validation_info(history)
 
     summary = {
         "run_id": run_id,
         "backend": backend,
         "created_at_utc": timestamp_utc,
+        "best_epoch": best_epoch,
+        "best_val_loss": best_val_loss,
+        "checkpoints": {
+            "latest": str(paths["latest_checkpoint"]),
+            "archive": str(paths["archive_checkpoint"]),
+        },
         "config": asdict(config),
         "history": history,
         "metrics": metrics,
@@ -158,6 +179,10 @@ def _persist_run_artifacts(
         "archive_history": paths["archive_history"],
         "latest_history_csv": paths["latest_history_csv"],
         "archive_history_csv": paths["archive_history_csv"],
+        "latest_checkpoint": paths["latest_checkpoint"],
+        "archive_checkpoint": paths["archive_checkpoint"],
+        "best_epoch": best_epoch,
+        "best_val_loss": best_val_loss,
     }
 
 
@@ -238,6 +263,7 @@ def _run_custom(args: argparse.Namespace) -> int:
     (x_train, y_train), (x_val, y_val), (x_test, y_test) = preprocess_data(train_dataset, test_dataset)
 
     history = model.train(x_train, y_train, x_val, y_val)
+    model.early_stopper.restore_best_weights(model.layers)
     args.save_path.parent.mkdir(parents=True, exist_ok=True)
     with args.save_path.open("w", encoding="utf-8") as history_file:
         json.dump(history, history_file, indent=2)
@@ -256,6 +282,8 @@ def _run_custom(args: argparse.Namespace) -> int:
             "test": test_metrics,
         },
     )
+    model.save(artifacts["latest_checkpoint"])
+    model.save(artifacts["archive_checkpoint"])
 
     print(f"history_path: {args.save_path}")
     print(f"run_id: {artifacts['run_id']}")
@@ -263,6 +291,10 @@ def _run_custom(args: argparse.Namespace) -> int:
     print(f"archive_summary_path: {artifacts['archive_summary']}")
     print(f"latest_csv_path: {artifacts['latest_history_csv']}")
     print(f"archive_csv_path: {artifacts['archive_history_csv']}")
+    print(f"best_epoch: {artifacts['best_epoch']}")
+    print(f"best_val_loss: {artifacts['best_val_loss']}")
+    print(f"latest_checkpoint_path: {artifacts['latest_checkpoint']}")
+    print(f"archive_checkpoint_path: {artifacts['archive_checkpoint']}")
     print(f"Final Training Misclassification Error: {100 * (1.0 - train_metrics['accuracy']):.2f} %")
     print(f"Final Test Misclassification Error: {100 * (1.0 - test_metrics['accuracy']):.2f} %")
     return 0
@@ -292,6 +324,8 @@ def _run_pytorch(args: argparse.Namespace) -> int:
             "test": test_metrics,
         },
     )
+    torch.save(model.state_dict(), artifacts["latest_checkpoint"])
+    torch.save(model.state_dict(), artifacts["archive_checkpoint"])
 
     print(f"history_path: {args.save_path}")
     print(f"run_id: {artifacts['run_id']}")
@@ -299,6 +333,10 @@ def _run_pytorch(args: argparse.Namespace) -> int:
     print(f"archive_summary_path: {artifacts['archive_summary']}")
     print(f"latest_csv_path: {artifacts['latest_history_csv']}")
     print(f"archive_csv_path: {artifacts['archive_history_csv']}")
+    print(f"best_epoch: {artifacts['best_epoch']}")
+    print(f"best_val_loss: {artifacts['best_val_loss']}")
+    print(f"latest_checkpoint_path: {artifacts['latest_checkpoint']}")
+    print(f"archive_checkpoint_path: {artifacts['archive_checkpoint']}")
     print(f"Final Test Misclassification Error: {100 * test_metrics['misclassification_error']:.2f} %")
     return 0
 
