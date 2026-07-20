@@ -4,6 +4,7 @@ from .model import FashionMNISTNet
 from .train import (
 	build_lr_scheduler,
 	build_optimizer,
+	evaluate_split,
 	evaluate_test_set,
 	get_device,
 	prepare_dataloaders,
@@ -32,6 +33,7 @@ __all__ = [
 	"build_optimizer",
 	"prepare_dataloaders",
 	"train_model",
+	"evaluate_split",
 	"evaluate_test_set",
 	"save_history",
 	"load_pytorch_history",
