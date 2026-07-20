@@ -1,24 +1,27 @@
-from custom_nn.config import default_config
-from pytorch_nn import (
-    FashionMNISTNet,
-    evaluate_test_set,
-    get_device,
-    prepare_dataloaders,
-    save_history,
-    train_model,
-)
+import sys
+from pathlib import Path
 
-config = default_config()
-device = get_device()
+sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 
-print(f"Using device: {device}")
+from custom_nn.cli import main as cli_main
 
-train_loader, val_loader, test_loader = prepare_dataloaders(config)
-model = FashionMNISTNet(config)
+_KNOWN_SUBCOMMANDS = {"custom", "pytorch", "compare"}
 
-history = train_model(model, train_loader, val_loader, config=config, device=device)
-history_path = save_history(history)
-print(f"Saved PyTorch history to: {history_path}")
 
-metrics = evaluate_test_set(model, test_loader, device=device)
-print(metrics)
+def _compat_argv(argv: list[str]) -> list[str]:
+    if not argv:
+        return ["pytorch"]
+
+    if argv[0] in _KNOWN_SUBCOMMANDS:
+        return argv
+
+    return ["pytorch", *argv]
+
+
+def main(argv: list[str] | None = None) -> int:
+    arguments = sys.argv[1:] if argv is None else argv
+    return cli_main(_compat_argv(arguments))
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
