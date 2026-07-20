@@ -205,10 +205,7 @@ def evaluate_test_set(
 	test_loader: DataLoader,
 	device: torch.device | None = None,
 ) -> dict[str, float]:
-	metrics = evaluate_split(model, test_loader, device=device)
-
-	print(f"Final Test Misclassification Error: {100 * metrics['misclassification_error']:.2f} %")
-	return metrics
+	return evaluate_split(model, test_loader, device=device)
 
 
 def save_history(
