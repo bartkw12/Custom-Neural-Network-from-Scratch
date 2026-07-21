@@ -343,8 +343,8 @@ def _run_pytorch(args: argparse.Namespace) -> int:
 
 def _run_compare(args: argparse.Namespace) -> int:
     artifacts = generate_comparison_artifacts(
-        custom_test_error=args.custom_test_error,
-        pytorch_test_error=args.pytorch_test_error,
+        custom_summary_path=args.custom_summary,
+        pytorch_summary_path=args.pytorch_summary,
         custom_history_path=args.custom_history,
         pytorch_history_path=args.pytorch_history,
     )
@@ -369,16 +369,16 @@ def build_parser() -> argparse.ArgumentParser:
 
     compare_parser = subparsers.add_parser("compare", help="Generate comparison artifacts from saved run data.")
     compare_parser.add_argument(
-        "--custom-test-error",
-        type=float,
-        required=True,
-        help="Custom model test error percentage.",
+        "--custom-summary",
+        type=Path,
+        default=None,
+        help="Path to custom run summary JSON.",
     )
     compare_parser.add_argument(
-        "--pytorch-test-error",
-        type=float,
-        required=True,
-        help="PyTorch model test error percentage.",
+        "--pytorch-summary",
+        type=Path,
+        default=None,
+        help="Path to PyTorch run summary JSON.",
     )
     compare_parser.add_argument("--custom-history", type=Path, default=None, help="Path to custom history JSON.")
     compare_parser.add_argument("--pytorch-history", type=Path, default=None, help="Path to PyTorch history JSON.")
