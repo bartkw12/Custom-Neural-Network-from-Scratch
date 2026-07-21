@@ -11,10 +11,24 @@ def _results_dir() -> Path:
 	return Path(__file__).resolve().parents[2] / "results"
 
 
+def _default_summary_path(backend: str) -> Path:
+	return _results_dir() / "latest" / backend / "run_summary.json"
+
+
+def _default_history_path(backend: str) -> Path:
+	return _results_dir() / "latest" / backend / "history.json"
+
+
 def _load_history(history_path: str | Path) -> dict[str, list[float]]:
 	history_path = Path(history_path)
 	with history_path.open("r", encoding="utf-8") as history_file:
 		return json.load(history_file)
+
+
+def _load_summary(summary_path: str | Path) -> dict:
+	summary_path = Path(summary_path)
+	with summary_path.open("r", encoding="utf-8") as summary_file:
+		return json.load(summary_file)
 
 
 def _save_plot(figure: plt.Figure, output_path: str | Path) -> Path:
@@ -27,7 +41,7 @@ def _save_plot(figure: plt.Figure, output_path: str | Path) -> Path:
 
 def load_pytorch_history(history_path: str | Path | None = None) -> dict[str, list[float]]:
 	if history_path is None:
-		history_path = _results_dir() / "pytorch_history.json"
+		history_path = _default_history_path("pytorch")
 
 	return _load_history(history_path)
 
@@ -37,12 +51,43 @@ def load_comparison_histories(
 	pytorch_history_path: str | Path | None = None,
 ) -> dict[str, dict[str, list[float]]]:
 	if custom_history_path is None:
-		custom_history_path = _results_dir() / "custom_nn_history.json"
+		custom_history_path = _default_history_path("custom")
 
 	return {
 		"custom_nn": _load_history(custom_history_path),
 		"pytorch_nn": load_pytorch_history(pytorch_history_path),
 	}
+
+
+def load_comparison_summaries(
+	custom_summary_path: str | Path | None = None,
+	pytorch_summary_path: str | Path | None = None,
+) -> dict[str, dict]:
+	if custom_summary_path is None:
+		custom_summary_path = _default_summary_path("custom")
+
+	if pytorch_summary_path is None:
+		pytorch_summary_path = _default_summary_path("pytorch")
+
+	return {
+		"custom_nn": _load_summary(custom_summary_path),
+		"pytorch_nn": _load_summary(pytorch_summary_path),
+	}
+
+
+def _extract_test_error_percentage(summary: dict, model_label: str) -> float:
+	test_metrics = summary.get("metrics", {}).get("test", {})
+
+	if "misclassification_error" in test_metrics:
+		return float(test_metrics["misclassification_error"]) * 100.0
+
+	if "accuracy" in test_metrics:
+		return (1.0 - float(test_metrics["accuracy"])) * 100.0
+
+	raise ValueError(
+		f"Could not find test misclassification data in run summary for {model_label}. "
+		"Expected metrics.test.misclassification_error or metrics.test.accuracy."
+	)
 
 
 def plot_training_loss_comparison(
@@ -115,12 +160,16 @@ def create_accuracy_table(
 
 
 def generate_comparison_artifacts(
-	custom_test_error: float,
-	pytorch_test_error: float,
+	custom_summary_path: str | Path | None = None,
+	pytorch_summary_path: str | Path | None = None,
 	custom_history_path: str | Path | None = None,
 	pytorch_history_path: str | Path | None = None,
 ) -> dict[str, Path]:
 	histories = load_comparison_histories(custom_history_path, pytorch_history_path)
+	summaries = load_comparison_summaries(custom_summary_path, pytorch_summary_path)
+	custom_test_error = _extract_test_error_percentage(summaries["custom_nn"], "Custom NN")
+	pytorch_test_error = _extract_test_error_percentage(summaries["pytorch_nn"], "PyTorch NN")
+
 	return {
 		"train_loss_plot": plot_training_loss_comparison(histories),
 		"val_loss_plot": plot_validation_loss_comparison(histories),
@@ -130,10 +179,10 @@ def generate_comparison_artifacts(
 
 def _build_argument_parser() -> argparse.ArgumentParser:
 	parser = argparse.ArgumentParser(description="Generate comparison plots for custom_nn vs pytorch_nn.")
-	parser.add_argument("--custom-test-error", type=float, required=True, help="Custom NN test error percentage.")
-	parser.add_argument("--pytorch-test-error", type=float, required=True, help="PyTorch NN test error percentage.")
-	parser.add_argument("--custom-history", type=Path, default=None, help="Path to custom_nn_history.json.")
-	parser.add_argument("--pytorch-history", type=Path, default=None, help="Path to pytorch_history.json.")
+	parser.add_argument("--custom-summary", type=Path, default=None, help="Path to custom run_summary.json.")
+	parser.add_argument("--pytorch-summary", type=Path, default=None, help="Path to pytorch run_summary.json.")
+	parser.add_argument("--custom-history", type=Path, default=None, help="Path to custom history.json.")
+	parser.add_argument("--pytorch-history", type=Path, default=None, help="Path to pytorch history.json.")
 	return parser
 
 
@@ -141,8 +190,8 @@ def main() -> None:
 	parser = _build_argument_parser()
 	args = parser.parse_args()
 	artifacts = generate_comparison_artifacts(
-		custom_test_error=args.custom_test_error,
-		pytorch_test_error=args.pytorch_test_error,
+		custom_summary_path=args.custom_summary,
+		pytorch_summary_path=args.pytorch_summary,
 		custom_history_path=args.custom_history,
 		pytorch_history_path=args.pytorch_history,
 	)
