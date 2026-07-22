@@ -75,11 +75,11 @@ Final generation notes in Phase 3 Implementation chat.
 ## Phase 5: CLI & Experiment Support
 > Allow running experiments from the command line with different configurations.
 
-- [ ] Add `argparse` CLI to `train.py`:
+- [x] Add `argparse` CLI to `train.py`:
   - `--epochs`, `--lr`, `--batch-size`, `--hidden-layers`, `--hidden-units`
   - `--seed`, `--save-path`, `--no-early-stopping`
-- [ ] Save training metrics to CSV/JSON after each run
-- [ ] Add model checkpoint saving (best validation loss weights)
+- [x] Save training metrics to CSV/JSON after each run
+- [x] Add model checkpoint saving (best validation loss weights)
 
 ---
 
@@ -120,7 +120,7 @@ Final generation notes in Phase 3 Implementation chat.
 | 2. Refactor to Class API | High | Medium | Completed |
 | 3. PyTorch Comparison | Very High | Medium | In Progress |
 | 4. Testing & Validation | High | Medium | Completed |
-| 5. CLI & Experiments | Medium | Low | Not Started |
+| 5. CLI & Experiments | Medium | Low | Completed |
 | 6. Visualization | High | Low | Not Started |
 | 7. Documentation & README | Very High | Medium | Not Started |
 
@@ -143,4 +143,10 @@ Final generation notes in Phase 3 Implementation chat.
   - Added deterministic pytest coverage for gradient correctness (Dense, ReLU, Softmax+Cross-entropy, BatchNorm), technique behavior (Dropout, Early Stopping, ADAM), integration behavior, and custom-vs-PyTorch parity.
   - Gradient validation exposed and fixed a real issue in softmax backward scaling to match mean cross-entropy loss semantics.
   - Full local suite currently passes (`python -m pytest tests -q`), so Phase 4 is complete and the project is ready to move to Phase 5.
+- Phase 5 completion notes:
+  - Implemented a unified subcommand CLI (`custom`, `pytorch`, `compare`) with compatibility entry points retained via `train.py`, `python -m custom_nn`, and `run_pytorch.py`.
+  - Added JSON config-file support plus CLI overrides; shared training flags now apply across both custom and PyTorch runs.
+  - Standardized artifact output to both `results/latest/<backend>/` and archived `results/runs/<run_id>/<backend>/` folders.
+  - Persisted structured JSON summaries, history JSON, per-epoch CSV, and best checkpoints (`.npz` for custom, `.pt` for PyTorch).
+  - Updated comparison flow to be explicit and artifact-driven by reading saved run summaries/histories rather than manually entered test errors.
 - Phases can overlap (e.g., write docs as you build each feature)
