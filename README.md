@@ -48,11 +48,9 @@ High-level ML libraries make it easy to train models, but they hide the numerica
 
 ### Planned / In Progress
 
-- Gradient checking tests
 - Confusion matrix visualization
 - Per-class accuracy analysis
-- Custom-vs-PyTorch loss curve overlays
-- CLI-based experiment configuration
+- Sample prediction grids (correct vs. incorrect)
 
 
 
@@ -163,7 +161,116 @@ Or run the package entry point:
 python -m custom_nn
 ```
 
-On first run, `torchvision` downloads Fashion-MNIST into `data/`. The training script saves loss history to `results/custom_nn_history.json` and displays a Matplotlib plot at the end of execution.
+These compatibility paths default to the `custom` subcommand of the unified CLI.
+
+### Unified CLI Commands
+
+Run custom NumPy training:
+
+```bash
+python train.py custom
+```
+
+Run PyTorch reference training:
+
+```bash
+python train.py pytorch
+```
+
+Generate explicit comparison artifacts from saved run outputs:
+
+```bash
+python train.py compare
+```
+
+PyTorch compatibility entry point (also delegates to the unified CLI):
+
+```bash
+python run_pytorch.py
+```
+
+### Common Training Flags
+
+The `custom` and `pytorch` subcommands share the same experiment flags:
+
+- `--config` (JSON config file)
+- `--epochs`
+- `--learning-rate`
+- `--batch-size`
+- `--hidden-layers`
+- `--hidden-units`
+- `--seed`
+- `--no-early-stopping`
+- `--save-path`
+
+Example with overrides:
+
+```bash
+python train.py custom --epochs 20 --learning-rate 0.001 --batch-size 128
+```
+
+### JSON Config File Format
+
+The CLI accepts a JSON object whose keys map directly to `NetworkConfig` fields.
+CLI flags override values from the config file.
+
+Example `experiment.json`:
+
+```json
+{
+	"epochs": 12,
+	"learning_rate": 0.001,
+	"batch_size": 128,
+	"hidden_layers": 3,
+	"hidden_units": 96,
+	"seed": 9782,
+	"l2_lambda": 0.001,
+	"dropout_rate_input": 0.1,
+	"dropout_rate_hidden": 0.3,
+	"patience": 5,
+	"min_delta": 1e-05
+}
+```
+
+Run with config:
+
+```bash
+python train.py pytorch --config experiment.json
+```
+
+### Artifact Output Layout
+
+Each completed training run writes artifacts to both a stable "latest" location and a timestamped archive location.
+
+```text
+results/
+├── latest/
+│   ├── custom/
+│   │   ├── run_summary.json
+│   │   ├── metrics.json
+│   │   ├── history.json
+│   │   ├── history.csv
+│   │   └── best_checkpoint.npz
+│   └── pytorch/
+│       ├── run_summary.json
+│       ├── metrics.json
+│       ├── history.json
+│       ├── history.csv
+│       └── best_checkpoint.pt
+└── runs/
+		└── <run_id>/
+				├── custom/
+				└── pytorch/
+```
+
+The compare workflow is explicit and artifact-driven. By default it reads:
+
+- `results/latest/custom/run_summary.json`
+- `results/latest/custom/history.json`
+- `results/latest/pytorch/run_summary.json`
+- `results/latest/pytorch/history.json`
+
+On first run, `torchvision` downloads Fashion-MNIST into `data/`.
 
 ## Programmatic Usage
 ```python
@@ -184,7 +291,8 @@ metrics = model.evaluate(X_test, Y_test)
 src/
 ├── custom_nn/   NumPy-based NN, training pipeline, and configuration
 └── pytorch_nn/  PyTorch reference model and comparison utilities
-train.py         Thin repository entry point for custom model training
-results/         Saved plots and training histories
+train.py         Thin compatibility entry point to unified CLI
+run_pytorch.py   Thin compatibility entry point to unified CLI (PyTorch default)
+results/         Run artifacts (latest + archived runs), plots, and histories
 data/            Fashion-MNIST download cache
 ```
