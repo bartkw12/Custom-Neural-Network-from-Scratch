@@ -3,6 +3,20 @@ import torch
 from torchvision import datasets
 from .config import SEED
 
+
+FASHION_MNIST_CLASSES = [
+    "T-shirt/top",
+    "Trouser",
+    "Pullover",
+    "Dress",
+    "Coat",
+    "Sandal",
+    "Shirt",
+    "Sneaker",
+    "Bag",
+    "Ankle boot",
+]
+
 def load_fashion_MNIST(seed=SEED):
     """
     Load the necessary train and test datasets.
