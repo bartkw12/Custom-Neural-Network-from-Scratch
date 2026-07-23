@@ -1,6 +1,6 @@
 from .model import Layer_Dense, Activation_ReLU, Activation_Softmax, Categorical_Cross_entropy_loss
 from .techniques import ADAM_Optimizer, Early_Stopping, Dropout, Batch_Normalization
-from .data_preprocessing import load_fashion_MNIST, preprocess_data
+from .data_preprocessing import FASHION_MNIST_CLASSES, load_fashion_MNIST, preprocess_data
 from .config import NetworkConfig
 from .network import NeuralNetwork
 from . import config
@@ -14,6 +14,7 @@ __all__ = [
 	"Early_Stopping",
 	"Dropout",
 	"Batch_Normalization",
+	"FASHION_MNIST_CLASSES",
 	"load_fashion_MNIST",
 	"preprocess_data",
 	"NetworkConfig",
