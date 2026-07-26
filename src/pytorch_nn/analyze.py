@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Sequence
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from numpy.typing import NDArray
@@ -149,3 +151,52 @@ def _predict_pytorch(model: FashionMNISTNet, X_test: np.ndarray) -> tuple[np.nda
         y_pred = logits.argmax(dim=1).numpy()
 
     return y_pred, probs
+
+
+def plot_confusion_matrix(
+    confusion_matrix: IntArray,
+    class_names: Sequence[str],
+    model_label: str,
+    output_path: str | Path,
+) -> Path:
+    """Render and save an annotated confusion-matrix heatmap."""
+    matrix = np.asarray(confusion_matrix, dtype=np.int64)
+
+    if matrix.ndim != 2 or matrix.shape[0] != matrix.shape[1]:
+        raise ValueError("confusion_matrix must be a square 2D array")
+
+    num_classes = matrix.shape[0]
+    if len(class_names) != num_classes:
+        raise ValueError("class_names length must match confusion_matrix dimensions")
+
+    total_samples = int(matrix.sum())
+    accuracy = float(np.trace(matrix) / total_samples) if total_samples > 0 else 0.0
+
+    figure, axis = plt.subplots(figsize=(10, 8))
+    image = axis.imshow(matrix, cmap="Blues")
+    figure.colorbar(image, ax=axis, fraction=0.046, pad=0.04)
+
+    axis.set_xticks(np.arange(num_classes))
+    axis.set_yticks(np.arange(num_classes))
+    axis.set_xticklabels(class_names)
+    axis.set_yticklabels(class_names)
+    plt.setp(axis.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+
+    axis.set_xlabel("Predicted label")
+    axis.set_ylabel("True label")
+    axis.set_title(f"{model_label} Confusion Matrix (Accuracy: {accuracy * 100:.2f}%)")
+
+    max_value = int(matrix.max()) if matrix.size > 0 else 0
+    threshold = max_value / 2.0
+    for row in range(num_classes):
+        for col in range(num_classes):
+            value = int(matrix[row, col])
+            text_color = "white" if value > threshold else "black"
+            axis.text(col, row, f"{value}", ha="center", va="center", color=text_color, fontsize=9)
+
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    figure.tight_layout()
+    figure.savefig(output_path, dpi=200, bbox_inches="tight")
+    plt.close(figure)
+    return output_path
