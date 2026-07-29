@@ -200,3 +200,56 @@ def plot_confusion_matrix(
     figure.savefig(output_path, dpi=200, bbox_inches="tight")
     plt.close(figure)
     return output_path
+
+
+def plot_per_class_accuracy_comparison(
+    custom_accuracy: FloatArray,
+    pytorch_accuracy: FloatArray,
+    class_names: Sequence[str],
+    output_path: str | Path,
+) -> Path:
+    """
+    Render a grouped bar chart comparing per-class accuracy between custom and PyTorch models.
+    
+    Classes are sorted by average accuracy (hardest first) to highlight the most difficult items.
+    """
+    custom_acc = np.asarray(custom_accuracy, dtype=np.float64).reshape(-1)
+    pytorch_acc = np.asarray(pytorch_accuracy, dtype=np.float64).reshape(-1)
+
+    num_classes = len(custom_acc)
+    if len(pytorch_acc) != num_classes or len(class_names) != num_classes:
+        raise ValueError("custom_accuracy, pytorch_accuracy, and class_names must all have the same length")
+
+    # Compute average accuracy per class (lower = harder).
+    avg_accuracy = (custom_acc + pytorch_acc) / 2.0
+
+    # Sort by average accuracy (ascending, so hardest first).
+    sorted_indices = np.argsort(avg_accuracy)
+
+    sorted_class_names = [str(class_names[i]) for i in sorted_indices]
+    sorted_custom_acc = custom_acc[sorted_indices] * 100.0
+    sorted_pytorch_acc = pytorch_acc[sorted_indices] * 100.0
+
+    figure, axis = plt.subplots(figsize=(12, 6))
+
+    x_positions = np.arange(num_classes)
+    bar_width = 0.35
+
+    axis.bar(x_positions - bar_width / 2, sorted_custom_acc, bar_width, label="Custom NN", alpha=0.8)
+    axis.bar(x_positions + bar_width / 2, sorted_pytorch_acc, bar_width, label="PyTorch NN", alpha=0.8)
+
+    axis.set_xlabel("Clothing Item (sorted by difficulty)")
+    axis.set_ylabel("Accuracy (%)")
+    axis.set_title("Per-Class Accuracy Comparison (Hardest First)")
+    axis.set_xticks(x_positions)
+    axis.set_xticklabels(sorted_class_names, rotation=45, ha="right")
+    axis.set_ylim(0, 105)
+    axis.legend()
+    axis.grid(axis="y", alpha=0.3)
+
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    figure.tight_layout()
+    figure.savefig(output_path, dpi=200, bbox_inches="tight")
+    plt.close(figure)
+    return output_path
