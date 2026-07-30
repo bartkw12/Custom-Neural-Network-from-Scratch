@@ -253,3 +253,88 @@ def plot_per_class_accuracy_comparison(
     figure.savefig(output_path, dpi=200, bbox_inches="tight")
     plt.close(figure)
     return output_path
+
+
+def plot_sample_predictions(
+    raw_images: np.ndarray,
+    y_true: IntArray,
+    y_pred: IntArray,
+    class_names: Sequence[str],
+    model_label: str,
+    output_path: str | Path,
+    sample_count: int = 25,
+    seed: int | None = None,
+) -> Path:
+    """
+    Render a grid of sample predictions with color-coded borders and titles.
+
+    Each cell shows a grayscale image with title 'Pred: {label} / True: {label}'.
+    Green title and border indicates a correct prediction; red indicates incorrect.
+    The selection deliberately includes a mix of correct and incorrect predictions.
+    """
+    images = np.asarray(raw_images)
+    true_labels = np.asarray(y_true, dtype=np.int64).reshape(-1)
+    pred_labels = np.asarray(y_pred, dtype=np.int64).reshape(-1)
+
+    if images.shape[0] != true_labels.shape[0] or images.shape[0] != pred_labels.shape[0]:
+        raise ValueError("raw_images, y_true, and y_pred must all have the same number of samples")
+
+    rng = np.random.default_rng(seed)
+
+    correct_indices = np.where(true_labels == pred_labels)[0]
+    incorrect_indices = np.where(true_labels != pred_labels)[0]
+
+    # Aim for at least min(5, total_incorrect) incorrect samples in the grid.
+    n_incorrect_target = min(5, len(incorrect_indices))
+    n_correct_target = sample_count - n_incorrect_target
+
+    # Sample without replacement, capped at what is available.
+    n_incorrect_actual = min(n_incorrect_target, len(incorrect_indices))
+    n_correct_actual = min(n_correct_target, len(correct_indices))
+    actual_count = n_incorrect_actual + n_correct_actual
+
+    chosen_incorrect = rng.choice(incorrect_indices, size=n_incorrect_actual, replace=False)
+    chosen_correct = rng.choice(correct_indices, size=n_correct_actual, replace=False)
+
+    selected_indices = np.concatenate([chosen_incorrect, chosen_correct])
+    rng.shuffle(selected_indices)
+
+    n_cols = int(np.ceil(np.sqrt(actual_count)))
+    n_rows = int(np.ceil(actual_count / n_cols))
+
+    figure, axes = plt.subplots(n_rows, n_cols, figsize=(n_cols * 2.0, n_rows * 2.4))
+    axes_flat = np.asarray(axes).reshape(-1)
+
+    figure.suptitle(f"{model_label} — Sample Predictions", fontsize=13, y=1.01)
+
+    for plot_index, ax in enumerate(axes_flat):
+        if plot_index >= actual_count:
+            ax.axis("off")
+            continue
+
+        sample_index = int(selected_indices[plot_index])
+        image = images[sample_index]
+        true_class = str(class_names[true_labels[sample_index]])
+        pred_class = str(class_names[pred_labels[sample_index]])
+        is_correct = bool(true_labels[sample_index] == pred_labels[sample_index])
+        color = "green" if is_correct else "red"
+
+        # Display grayscale image (handles both (H, W) and (H, W, C) shapes).
+        display_image = image.squeeze()
+        ax.imshow(display_image, cmap="gray", vmin=0.0, vmax=1.0)
+
+        ax.set_title(f"Pred: {pred_class}\nTrue: {true_class}", fontsize=7, color=color)
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+        # Color-code all four spines.
+        for spine in ax.spines.values():
+            spine.set_edgecolor(color)
+            spine.set_linewidth(2)
+
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    figure.tight_layout()
+    figure.savefig(output_path, dpi=200, bbox_inches="tight")
+    plt.close(figure)
+    return output_path
