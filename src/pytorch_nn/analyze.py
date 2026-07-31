@@ -338,3 +338,55 @@ def plot_sample_predictions(
     figure.savefig(output_path, dpi=200, bbox_inches="tight")
     plt.close(figure)
     return output_path
+
+
+def plot_training_curves_combined(
+    histories: dict[str, dict[str, list[float]]],
+    output_path: str | Path,
+) -> Path:
+    """
+    Render a combined training-curves figure with two side-by-side subplots.
+
+    Left subplot: training loss for both backends.
+    Right subplot: validation loss for both backends.
+
+    The ``histories`` dict must follow the shape returned by
+    ``pytorch_nn.compare.load_comparison_histories``:
+    ``{"custom_nn": {"train_loss": [...], "val_loss": [...]}, "pytorch_nn": {...}}``.
+    """
+    custom_history = histories["custom_nn"]
+    pytorch_history = histories["pytorch_nn"]
+
+    custom_train = custom_history["train_loss"]
+    custom_val = custom_history["val_loss"]
+    pytorch_train = pytorch_history["train_loss"]
+    pytorch_val = pytorch_history["val_loss"]
+
+    figure, (ax_train, ax_val) = plt.subplots(1, 2, figsize=(14, 5))
+
+    # --- Left: training loss ---
+    ax_train.plot(range(1, len(custom_train) + 1), custom_train, label="Custom NN", linewidth=2)
+    ax_train.plot(range(1, len(pytorch_train) + 1), pytorch_train, label="PyTorch NN", linewidth=2)
+    ax_train.set_xlabel("Epoch")
+    ax_train.set_ylabel("Cross-entropy Loss")
+    ax_train.set_title("Training Loss")
+    ax_train.legend()
+    ax_train.grid(alpha=0.3)
+
+    # --- Right: validation loss ---
+    ax_val.plot(range(1, len(custom_val) + 1), custom_val, label="Custom NN", linewidth=2)
+    ax_val.plot(range(1, len(pytorch_val) + 1), pytorch_val, label="PyTorch NN", linewidth=2)
+    ax_val.set_xlabel("Epoch")
+    ax_val.set_ylabel("Cross-entropy Loss")
+    ax_val.set_title("Validation Loss")
+    ax_val.legend()
+    ax_val.grid(alpha=0.3)
+
+    figure.suptitle("Custom NN vs PyTorch NN — Training Curves", fontsize=13)
+
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    figure.tight_layout()
+    figure.savefig(output_path, dpi=200, bbox_inches="tight")
+    plt.close(figure)
+    return output_path
