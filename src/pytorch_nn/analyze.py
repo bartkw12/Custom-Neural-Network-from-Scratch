@@ -11,7 +11,8 @@ import numpy as np
 import torch
 from numpy.typing import NDArray
 
-from custom_nn import NetworkConfig, NeuralNetwork, load_fashion_MNIST, preprocess_data
+from custom_nn import FASHION_MNIST_CLASSES, NetworkConfig, NeuralNetwork, load_fashion_MNIST, preprocess_data
+from pytorch_nn.compare import load_comparison_histories
 from pytorch_nn.model import FashionMNISTNet
 
 
@@ -390,3 +391,91 @@ def plot_training_curves_combined(
     figure.savefig(output_path, dpi=200, bbox_inches="tight")
     plt.close(figure)
     return output_path
+
+
+def generate_analysis_artifacts(
+    custom_summary_path: str | Path | None = None,
+    pytorch_summary_path: str | Path | None = None,
+    sample_count: int = 25,
+    sample_seed: int | None = None,
+) -> dict[str, Path]:
+    """Generate all Phase 6 analysis artifacts into the top-level results directory."""
+    if custom_summary_path is None:
+        custom_summary_path = _default_summary_path("custom")
+    if pytorch_summary_path is None:
+        pytorch_summary_path = _default_summary_path("pytorch")
+
+    custom_summary = _load_summary(custom_summary_path)
+    pytorch_summary = _load_summary(pytorch_summary_path)
+
+    custom_model = _load_custom_model(custom_summary)
+    pytorch_model = _load_pytorch_model(pytorch_summary)
+
+    custom_config = _config_from_summary(custom_summary)
+    pytorch_config = _config_from_summary(pytorch_summary)
+
+    custom_x_test, custom_y_test_onehot, custom_raw_images = _rebuild_test_set(custom_config)
+    pytorch_x_test, pytorch_y_test_onehot, pytorch_raw_images = _rebuild_test_set(pytorch_config)
+
+    custom_y_true = np.argmax(custom_y_test_onehot, axis=1).astype(np.int64)
+    pytorch_y_true = np.argmax(pytorch_y_test_onehot, axis=1).astype(np.int64)
+
+    custom_y_pred, _ = _predict_custom(custom_model, custom_x_test)
+    pytorch_y_pred, _ = _predict_pytorch(pytorch_model, pytorch_x_test)
+
+    num_classes = len(FASHION_MNIST_CLASSES)
+    custom_cm = compute_confusion_matrix(custom_y_true, custom_y_pred, num_classes=num_classes)
+    pytorch_cm = compute_confusion_matrix(pytorch_y_true, pytorch_y_pred, num_classes=num_classes)
+
+    custom_per_class_accuracy = compute_per_class_accuracy(custom_y_true, custom_y_pred, num_classes=num_classes)
+    pytorch_per_class_accuracy = compute_per_class_accuracy(pytorch_y_true, pytorch_y_pred, num_classes=num_classes)
+
+    results_dir = Path(__file__).resolve().parents[2] / "results"
+    histories = load_comparison_histories()
+
+    artifacts = {
+        "confusion_matrix_custom": plot_confusion_matrix(
+            confusion_matrix=custom_cm,
+            class_names=FASHION_MNIST_CLASSES,
+            model_label="Custom NN",
+            output_path=results_dir / "confusion_matrix_custom.png",
+        ),
+        "confusion_matrix_pytorch": plot_confusion_matrix(
+            confusion_matrix=pytorch_cm,
+            class_names=FASHION_MNIST_CLASSES,
+            model_label="PyTorch NN",
+            output_path=results_dir / "confusion_matrix_pytorch.png",
+        ),
+        "per_class_accuracy_comparison": plot_per_class_accuracy_comparison(
+            custom_accuracy=custom_per_class_accuracy,
+            pytorch_accuracy=pytorch_per_class_accuracy,
+            class_names=FASHION_MNIST_CLASSES,
+            output_path=results_dir / "per_class_accuracy_comparison.png",
+        ),
+        "sample_predictions_custom": plot_sample_predictions(
+            raw_images=custom_raw_images,
+            y_true=custom_y_true,
+            y_pred=custom_y_pred,
+            class_names=FASHION_MNIST_CLASSES,
+            model_label="Custom NN",
+            output_path=results_dir / "sample_predictions_custom.png",
+            sample_count=sample_count,
+            seed=sample_seed,
+        ),
+        "sample_predictions_pytorch": plot_sample_predictions(
+            raw_images=pytorch_raw_images,
+            y_true=pytorch_y_true,
+            y_pred=pytorch_y_pred,
+            class_names=FASHION_MNIST_CLASSES,
+            model_label="PyTorch NN",
+            output_path=results_dir / "sample_predictions_pytorch.png",
+            sample_count=sample_count,
+            seed=sample_seed,
+        ),
+        "comparison_training_curves": plot_training_curves_combined(
+            histories=histories,
+            output_path=results_dir / "comparison_training_curves.png",
+        ),
+    }
+
+    return artifacts
