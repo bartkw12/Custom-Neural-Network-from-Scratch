@@ -17,6 +17,7 @@ from torch.utils.data import DataLoader
 from custom_nn.config import NetworkConfig, default_config
 from custom_nn.data_preprocessing import load_fashion_MNIST, preprocess_data
 from custom_nn.network import NeuralNetwork
+from pytorch_nn.analyze import generate_analysis_artifacts
 from pytorch_nn.compare import generate_comparison_artifacts
 from pytorch_nn.model import FashionMNISTNet
 from pytorch_nn.train import evaluate_split, evaluate_test_set, prepare_dataloaders, save_history, train_model
@@ -355,6 +356,20 @@ def _run_compare(args: argparse.Namespace) -> int:
     return 0
 
 
+def _run_analyze(args: argparse.Namespace) -> int:
+    artifacts = generate_analysis_artifacts(
+        custom_summary_path=args.custom_summary,
+        pytorch_summary_path=args.pytorch_summary,
+        sample_count=args.sample_count,
+        sample_seed=args.sample_seed,
+    )
+
+    for name, path in artifacts.items():
+        print(f"{name}: {path}")
+
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Custom NN experiment CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -383,6 +398,36 @@ def build_parser() -> argparse.ArgumentParser:
     compare_parser.add_argument("--custom-history", type=Path, default=None, help="Path to custom history JSON.")
     compare_parser.add_argument("--pytorch-history", type=Path, default=None, help="Path to PyTorch history JSON.")
     compare_parser.set_defaults(handler=_run_compare)
+
+    analyze_parser = subparsers.add_parser(
+        "analyze",
+        help="Generate analysis visualizations (confusion matrices, per-class accuracy, sample predictions).",
+    )
+    analyze_parser.add_argument(
+        "--custom-summary",
+        type=Path,
+        default=None,
+        help="Path to custom run summary JSON (defaults to results/latest/custom/run_summary.json).",
+    )
+    analyze_parser.add_argument(
+        "--pytorch-summary",
+        type=Path,
+        default=None,
+        help="Path to PyTorch run summary JSON (defaults to results/latest/pytorch/run_summary.json).",
+    )
+    analyze_parser.add_argument(
+        "--sample-count",
+        type=int,
+        default=25,
+        help="Number of sample images to include in prediction grids (default: 25).",
+    )
+    analyze_parser.add_argument(
+        "--sample-seed",
+        type=int,
+        default=None,
+        help="Random seed for reproducible sample selection in prediction grids.",
+    )
+    analyze_parser.set_defaults(handler=_run_analyze)
 
     return parser
 
