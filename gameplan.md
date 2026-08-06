@@ -44,7 +44,7 @@ Transform this from a class assignment into a polished portfolio piece that demo
 - [x] Use identical hyperparameters (learning rate, batch size, epochs, etc.)
 - [x] Use identical data splits (same seed, same preprocessing pipeline)
 - [x] Log training/validation loss per epoch for both implementations
-- [ ] Generate comparison plots:
+- [x] Generate comparison plots:
   - Training loss curves (both on same plot)
   - Validation loss curves (both on same plot)
   - Final test accuracy table
@@ -86,11 +86,11 @@ Final generation notes in Phase 3 Implementation chat.
 ## Phase 6: Visualization & Analysis
 > Go beyond a single loss curve — show the model's behavior in detail.
 
-- [ ] Confusion matrix heatmap on test set
-- [ ] Per-class accuracy bar chart (which clothing items are hardest?)
-- [ ] Sample predictions grid (correct and incorrect, showing images)
-- [ ] Training curve comparison plot (custom vs. PyTorch)
-- [ ] Save all figures to `results/` with descriptive names
+- [x] Confusion matrix heatmap on test set
+- [x] Per-class accuracy bar chart (which clothing items are hardest?)
+- [x] Sample predictions grid (correct and incorrect, showing images)
+- [x] Training curve comparison plot (custom vs. PyTorch)
+- [x] Save all figures to `results/` with descriptive names
 
 ---
 
