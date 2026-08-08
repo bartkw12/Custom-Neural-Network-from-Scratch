@@ -1,15 +1,21 @@
-from .config import LAMBDA
+from __future__ import annotations
+
 import numpy as np
+from numpy.typing import NDArray
+
+from .config import LAMBDA
 
 
 class Layer_Dense:
+    """Fully connected linear layer: Z = XW + b, with optional L2 weight regularization."""
 
     # NN Layer initialization
-    def __init__(self, n_inputs, n_neurons, l2_lambda=LAMBDA):
+    def __init__(self, n_inputs: int, n_neurons: int, l2_lambda: float = LAMBDA) -> None:
+        """Initialize near-zero random weights and zero biases."""
 
         # Initialize weights and biases
-        self.weights = 0.01 * np.random.randn(n_inputs, n_neurons)  # set weights to random (mean 0 and variance 1)
-        self.biases = np.zeros((1, n_neurons))                      # set biases to be zero
+        self.weights: NDArray = 0.01 * np.random.randn(n_inputs, n_neurons)  # set weights to random (mean 0 and variance 1)
+        self.biases: NDArray = np.zeros((1, n_neurons))                      # set biases to be zero
 
         # L2 regularization
         self.l2_lambda = l2_lambda
@@ -18,7 +24,8 @@ class Layer_Dense:
         # self.weights = np.random.randn(n_inputs, n_neurons) * np.sqrt(2 / n_inputs)
 
     # Forward pass
-    def forward(self, inputs):
+    def forward(self, inputs: NDArray) -> NDArray:
+        """Compute Z = XW + b and cache inputs for the backward pass."""
 
         # Store inputs for backward pass
         self.inputs = inputs
@@ -29,7 +36,8 @@ class Layer_Dense:
         return self.output
 
     # Backpropagation
-    def backward(self, dvalues):
+    def backward(self, dvalues: NDArray) -> NDArray:
+        """Compute gradients w.r.t. weights (including L2 penalty), biases, and inputs."""
 
         # Weight Decay - L2 Regularization
         # Gradient of loss with respect to weights (including L2 penalty)
@@ -46,9 +54,11 @@ class Layer_Dense:
 
 # ReLU Activation
 class Activation_ReLU:
+    """Element-wise Rectified Linear Unit: output = max(0, input)."""
 
     # Forward pass
-    def forward(self, inputs):
+    def forward(self, inputs: NDArray) -> NDArray:
+        """Apply ReLU and cache inputs for the backward pass."""
 
         # Remember input values
         self.inputs = inputs
@@ -59,7 +69,8 @@ class Activation_ReLU:
         return self.output
 
     # Backpropagation
-    def backward(self, dvalues):
+    def backward(self, dvalues: NDArray) -> NDArray:
+        """Pass upstream gradients through only where the pre-activation input was positive."""
 
         # copy to modify original variable
         # gradient of the loss w respect to the input of the ReLU function
@@ -73,9 +84,15 @@ class Activation_ReLU:
 
 # Softmax Activation
 class Activation_Softmax:
+    """Softmax activation that converts logits into a normalized class-probability distribution.
+
+    The ``backward`` pass is fused with cross-entropy loss, yielding the simplified
+    gradient ``(y_hat - y_true) / n_samples``.
+    """
 
     # Forward pass
-    def forward(self, inputs):
+    def forward(self, inputs: NDArray) -> NDArray:
+        """Convert logits to class probabilities using the numerically stable softmax formula."""
 
         # Remember input values
         self.inputs = inputs
@@ -91,7 +108,8 @@ class Activation_Softmax:
         return self.output
 
     # Backpropagation
-    def backward(self, y_true):
+    def backward(self, y_true: NDArray) -> NDArray:
+        """Compute the fused softmax + cross-entropy gradient: (y_hat - y_true) / n_samples."""
 
         # this backwards pass simplifies with the categorical cross entropy loss backwards pass
         # Gradient of the loss with respect to the inputs
@@ -103,12 +121,15 @@ class Activation_Softmax:
 
 # Categorical Cross-entropy Loss Function
 class Categorical_Cross_entropy_loss:
+    """Mean categorical cross-entropy loss with optional L2 regularization support."""
 
-    def __init__(self, l2_lambda=LAMBDA):
+    def __init__(self, l2_lambda: float = LAMBDA) -> None:
+        """Store the L2 regularization coefficient (used externally by the optimizer)."""
         self.l2_lambda = l2_lambda
 
     # Forward Pass
-    def forward(self, y_pred, y_true):
+    def forward(self, y_pred: NDArray, y_true: NDArray) -> float:
+        """Compute mean cross-entropy loss given softmax probabilities and one-hot labels."""
 
         # clip data to prevent 0 div error and not skew mean
         y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7)
