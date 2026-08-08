@@ -1,11 +1,23 @@
-from .config import LEARNING_RATE, DROPOUT_RATE_INPUT, DROPOUT_RATE_HIDDEN, PATIENCE, MIN_DELTA, MOMENTUM, EPSILON, BETA1, BETA2, EPSILON_A, DECAY
+from __future__ import annotations
+
+from typing import Any
+
 import numpy as np
+from numpy.typing import NDArray
+
+from .config import BETA1, BETA2, DECAY, DROPOUT_RATE_HIDDEN, DROPOUT_RATE_INPUT, EPSILON, EPSILON_A, LEARNING_RATE, MIN_DELTA, MOMENTUM, PATIENCE
 
 
 # ADAM Optimizer
 class ADAM_Optimizer:
+    """Adam optimizer with optional per-batch learning-rate decay.
 
-    def __init__(self, learning_rate=LEARNING_RATE, beta1=BETA1, beta2=BETA2, epsilon=EPSILON_A, decay=DECAY):
+    Maintains first- and second-moment estimates (momentum and RMS cache) per
+    parameter and applies bias correction before each weight update.
+    """
+
+    def __init__(self, learning_rate: float = LEARNING_RATE, beta1: float = BETA1, beta2: float = BETA2, epsilon: float = EPSILON_A, decay: float = DECAY) -> None:
+        """Initialize Adam hyperparameters and set the iteration counter to zero."""
         self.learning_rate = learning_rate
         self.current_learning_rate = learning_rate
         self.beta1 = beta1
@@ -14,15 +26,15 @@ class ADAM_Optimizer:
         self.decay = decay
         self.iterations = 0
 
-    # adjust the learning rate based on decay factor and # of iterations
-    def pre_update_params(self):
+    def pre_update_params(self) -> None:
+        """Decay the learning rate before each batch update, if a decay factor is set."""
         if self.decay:
             self.current_learning_rate = self.learning_rate * (1. / (1. + self.decay * self.iterations))
 
             # print(f"The learning rate currently is: {self.current_learning_rate}")
 
-    # Update parameters
-    def update_params(self, layer):
+    def update_params(self, layer: Any) -> None:
+        """Apply one Adam update step to the ``weights`` and ``biases`` of a dense layer."""
 
         # If layer does not contain cache arrays, create them filled with zeros
         # arrays store the exponentially decaying averages of gradients (momentum) and squared gradients (cache)
@@ -54,8 +66,8 @@ class ADAM_Optimizer:
         layer.biases += -self.current_learning_rate * bias_momentums_corrected / (np.sqrt(bias_cache_corrected)
                                                                                   + self.epsilon)
 
-    # separate method to update gamma and beta from batch norm
-    def update_params_bn(self, layer):
+    def update_params_bn(self, layer: Any) -> None:
+        """Apply one Adam update step to the ``gamma`` and ``beta`` of a batch normalization layer."""
 
         # If no momentums/caches exist, create them filled w zeroes
         if not hasattr(layer, 'gamma_cache'):
@@ -86,22 +98,26 @@ class ADAM_Optimizer:
 
         layer.beta -= self.current_learning_rate * beta_momentums_corrected / (np.sqrt(beta_cache_corrected) + self.epsilon)
 
-    # Call once after any parameter updates
-    def post_update_params(self):
+    def post_update_params(self) -> None:
+        """Increment the internal iteration counter after all parameter updates for a batch."""
         self.iterations += 1
 
 
 # Early Stopping
 class Early_Stopping:
-    def __init__(self, patience=PATIENCE, min_delta=MIN_DELTA):
+    """Halt training when validation loss stops improving and restore the best weights."""
+
+    def __init__(self, patience: int = PATIENCE, min_delta: float = MIN_DELTA) -> None:
+        """Initialize patience counter and best-loss tracker."""
         self.patience = patience    # Number of epochs to wait for improvement
         self.min_delta = min_delta  # Minimum change in validation loss to qualify as improvement
         self.best_loss = np.inf     # Stores the best validation loss encountered
         self.best_layer_states = None  # Stores the best trainable layer state
         self.wait = 0               # Counter for epochs without improvement
 
-    def _capture_layer_state(self, layer):
-        state = {}
+    def _capture_layer_state(self, layer: Any) -> dict[str, NDArray]:
+        """Snapshot the trainable parameters of a single layer into a plain dict."""
+        state: dict[str, NDArray] = {}
 
         if hasattr(layer, 'weights'):
             state['weights'] = layer.weights.copy()
@@ -115,7 +131,8 @@ class Early_Stopping:
 
         return state
 
-    def forward(self, validation_loss, layers):
+    def forward(self, validation_loss: float, layers: list[Any]) -> bool:
+        """Check for improvement; return True if training should stop."""
         if validation_loss < self.best_loss - self.min_delta:
             # Improvement has been detected
             self.best_loss = validation_loss
@@ -129,7 +146,8 @@ class Early_Stopping:
                 return True  # Stop training
         return False
 
-    def restore_best_weights(self, layers):
+    def restore_best_weights(self, layers: list[Any]) -> None:
+        """Restore all layers to the parameter snapshot captured at the best validation loss."""
         # Restore the best state to the layers.
         if self.best_layer_states is not None:
             for layer, state in zip(layers, self.best_layer_states):
@@ -146,14 +164,17 @@ class Early_Stopping:
 
 # Dropout
 class Dropout:
+    """Inverted dropout regularization: scales active neurons by ``1/keep_prob`` during training."""
 
-    def __init__(self, dropout_rate_input=DROPOUT_RATE_INPUT, dropout_rate_hidden=DROPOUT_RATE_HIDDEN):
+    def __init__(self, dropout_rate_input: float = DROPOUT_RATE_INPUT, dropout_rate_hidden: float = DROPOUT_RATE_HIDDEN) -> None:
+        """Convert dropout rates to keep-probabilities and initialise the mask to None."""
         # percentage of neurons to keep active
         self.dropout_rate_input = 1 - dropout_rate_input
         self.dropout_rate_hidden = 1 - dropout_rate_hidden
         self.mask = None
 
-    def forward(self, inputs, training=True, input_layer=False):
+    def forward(self, inputs: NDArray, training: bool = True, input_layer: bool = False) -> NDArray:
+        """Apply an inverted dropout mask during training; pass inputs unchanged during inference."""
 
         # Save input values
         self.inputs = inputs
@@ -173,7 +194,8 @@ class Dropout:
 
         return self.output
 
-    def backward(self, dvalues):
+    def backward(self, dvalues: NDArray) -> NDArray:
+        """Apply the stored dropout mask to upstream gradients."""
 
         # calc. gradient for active neuron inputs
         self.dinputs = dvalues * self.mask
@@ -183,8 +205,14 @@ class Dropout:
 
 # Batch Normalization
 class Batch_Normalization:
+    """Per-feature batch normalization with learnable scale (gamma) and shift (beta).
 
-    def __init__(self, n_neurons, momentum=MOMENTUM, epsilon=EPSILON):
+    During training normalizes using batch statistics; at inference uses running statistics
+    accumulated via exponential moving average.
+    """
+
+    def __init__(self, n_neurons: int, momentum: float = MOMENTUM, epsilon: float = EPSILON) -> None:
+        """Initialize gamma=1, beta=0, and running-statistics buffers."""
 
         # Initialize the trainable scale (gamma) and shift (beta) parameters
         self.gamma = np.ones(n_neurons)
@@ -199,7 +227,8 @@ class Batch_Normalization:
         self.running_mean = np.zeros(n_neurons)
         self.running_variance = np.ones(n_neurons)
 
-    def forward(self, inputs, training=True):
+    def forward(self, inputs: NDArray, training: bool = True) -> NDArray:
+        """Normalize using batch stats (training) or running stats (inference), then scale and shift."""
 
         # Save input values
         self.inputs = inputs
@@ -234,7 +263,8 @@ class Batch_Normalization:
 
         return self.output
 
-    def backward(self, dvalues):
+    def backward(self, dvalues: NDArray) -> NDArray:
+        """Compute gradients w.r.t. gamma, beta, and inputs via the full batch-norm backward formula."""
 
         # batch sample shape
         m = dvalues.shape[0]
