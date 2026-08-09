@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import numpy as np
+from numpy.typing import NDArray
 import torch
 from torchvision import datasets
 from .config import SEED
@@ -17,7 +20,7 @@ FASHION_MNIST_CLASSES = [
     "Ankle boot",
 ]
 
-def load_fashion_MNIST(seed=SEED):
+def load_fashion_MNIST(seed: int = SEED) -> tuple[datasets.FashionMNIST, datasets.FashionMNIST]:
     """
     Load the necessary train and test datasets.
     """
@@ -32,7 +35,11 @@ def load_fashion_MNIST(seed=SEED):
     return train_dataset, test_dataset
 
 
-def preprocess_data(train_dataset, test_dataset, validation_ratio=0.2):
+def preprocess_data(
+    train_dataset: datasets.FashionMNIST,
+    test_dataset: datasets.FashionMNIST,
+    validation_ratio: float = 0.2,
+) -> tuple[tuple[NDArray, NDArray], tuple[NDArray, NDArray], tuple[NDArray, NDArray]]:
     """
     Preprocess the dataset by reshaping it to a proper numpy array, splitting further to obtain a validation set,
     one-hot encoding, and finally standardizing the data.
