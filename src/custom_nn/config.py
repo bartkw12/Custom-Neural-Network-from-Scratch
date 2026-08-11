@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Any
 
@@ -42,6 +44,11 @@ SEED = 9782
 
 @dataclass(slots=True)
 class NetworkConfig:
+	"""Centralized configuration for architecture, training, and regularization hyperparameters.
+
+	Supports both a simplified interface (``hidden_layers`` / ``hidden_units``) and a fully
+	explicit ``layer_specs`` override for custom architectures.
+	"""
 	# Architecture (simplified)
 	input_size: int = INPUT_SIZE
 	output_size: int = OUTPUT_SIZE
@@ -76,11 +83,13 @@ class NetworkConfig:
 	patience: int = PATIENCE
 	min_delta: float = MIN_DELTA
 
-	def __post_init__(self):
+	def __post_init__(self) -> None:
+		"""Validate that at least one hidden layer is configured when using the simplified interface."""
 		if self.hidden_layers < 1 and self.layer_specs is None:
 			raise ValueError("hidden_layers must be at least 1 when layer_specs is not provided")
 
 	def get_layer_specs(self) -> list[dict[str, Any]]:
+		"""Return the ordered list of layer specification dicts used to build the network."""
 		if self.layer_specs is not None:
 			return self.layer_specs
 
@@ -122,4 +131,5 @@ class NetworkConfig:
 
 
 def default_config() -> NetworkConfig:
+	"""Return a ``NetworkConfig`` instance populated with the default hyperparameter values."""
 	return NetworkConfig()
