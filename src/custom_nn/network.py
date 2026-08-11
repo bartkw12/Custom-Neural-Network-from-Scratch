@@ -1,6 +1,10 @@
+from __future__ import annotations
+
 from pathlib import Path
+from typing import Any
 
 import numpy as np
+from numpy.typing import NDArray
 import torch
 
 from .config import NetworkConfig, default_config
@@ -9,7 +13,14 @@ from .techniques import ADAM_Optimizer, Batch_Normalization, Dropout, Early_Stop
 
 
 class NeuralNetwork:
-    def __init__(self, config: NetworkConfig | None = None):
+    """Full training and inference pipeline for the custom NumPy neural network.
+
+    Encapsulates layer construction, forward/backward passes, mini-batch training
+    with Adam optimization, early stopping, prediction, evaluation, and checkpoint I/O.
+    """
+
+    def __init__(self, config: NetworkConfig | None = None) -> None:
+        """Build layers, loss function, optimizer, and early stopper from *config*."""
         self.config = config if config is not None else default_config()
 
         np.random.seed(self.config.seed)
@@ -29,8 +40,9 @@ class NeuralNetwork:
             min_delta=self.config.min_delta,
         )
 
-    def _build_layers(self):
-        layers = []
+    def _build_layers(self) -> list[Any]:
+        """Instantiate ordered layer objects from the config's layer-spec list."""
+        layers: list[Any] = []
 
         for spec in self.config.get_layer_specs():
             layer_type = spec["type"]
@@ -67,7 +79,8 @@ class NeuralNetwork:
 
         return layers
 
-    def forward(self, X, training=True):
+    def forward(self, X: NDArray, training: bool = True) -> NDArray:
+        """Run a forward pass through all layers. Set ``training=False`` for inference."""
         outputs = X
 
         for layer in self.layers:
@@ -84,7 +97,8 @@ class NeuralNetwork:
 
         return outputs
 
-    def backward(self, y_true):
+    def backward(self, y_true: NDArray) -> NDArray | None:
+        """Backpropagate the loss gradient from the softmax output through all preceding layers."""
         dvalues = self.layers[-1].backward(y_true)
 
         for layer in reversed(self.layers[:-1]):
@@ -93,7 +107,8 @@ class NeuralNetwork:
 
         return dvalues
 
-    def _update_weights(self):
+    def _update_weights(self) -> None:
+        """Apply one Adam optimizer step to all trainable (dense and batch-norm) layers."""
         self.optimizer.pre_update_params()
 
         for layer in self.layers:
@@ -104,16 +119,19 @@ class NeuralNetwork:
 
         self.optimizer.post_update_params()
 
-    def _compute_loss(self, X, Y, training=False):
+    def _compute_loss(self, X: NDArray, Y: NDArray, training: bool = False) -> float:
+        """Run a forward pass and return the scalar cross-entropy loss."""
         outputs = self.forward(X, training=training)
         return self.loss_function.forward(outputs, Y)
 
-    def _compute_accuracy(self, X, Y):
+    def _compute_accuracy(self, X: NDArray, Y: NDArray) -> float:
+        """Return the fraction of samples whose predicted class matches the true label."""
         predictions = self.predict(X)
         true_labels = np.argmax(Y, axis=1)
         return float(np.mean(predictions == true_labels))
 
-    def train(self, X_train, Y_train, X_val, Y_val):
+    def train(self, X_train: NDArray, Y_train: NDArray, X_val: NDArray, Y_val: NDArray) -> dict[str, list[float]]:
+        """Run the full training loop with mini-batches, early stopping, and per-epoch history logging."""
         history = {
             "train_loss": [],
             "val_loss": [],
@@ -159,17 +177,20 @@ class NeuralNetwork:
 
         return history
 
-    def predict(self, X):
+    def predict(self, X: NDArray) -> NDArray:
+        """Return the predicted class index (argmax of softmax output) for each sample in X."""
         outputs = self.forward(X, training=False)
         return np.argmax(outputs, axis=1)
 
-    def evaluate(self, X, Y):
+    def evaluate(self, X: NDArray, Y: NDArray) -> dict[str, float]:
+        """Return a dict with ``'loss'`` and ``'accuracy'`` computed on the given data split."""
         return {
             "loss": self._compute_loss(X, Y, training=False),
             "accuracy": self._compute_accuracy(X, Y),
         }
 
-    def save(self, path):
+    def save(self, path: str | Path) -> None:
+        """Serialize all trainable layer parameters to a compressed NumPy archive (.npz)."""
         save_path = Path(path)
         save_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -190,7 +211,8 @@ class NeuralNetwork:
 
         np.savez(save_path, **state)
 
-    def load(self, path):
+    def load(self, path: str | Path) -> None:
+        """Restore trainable layer parameters from a NumPy archive saved by ``save()``."""
         loaded = np.load(path)
 
         for index, layer in enumerate(self.layers):
