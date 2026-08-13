@@ -1,5 +1,7 @@
 # Custom Neural Network From Scratch
 
+!!! New README coming soon !!!
+
 ## Abstract
 This repository presents a fully connected neural network for the Fashion-MNIST classification dataset, implemented from first principles in NumPy, with PyTorch used only for dataset loading in the custom pipeline. The project is structured as a reusable Python package and includes a parallel PyTorch implementation for architecture and training pipeline comparison.
 
