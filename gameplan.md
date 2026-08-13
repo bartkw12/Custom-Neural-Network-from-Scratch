@@ -150,3 +150,5 @@ Final generation notes in Phase 3 Implementation chat.
   - Persisted structured JSON summaries, history JSON, per-epoch CSV, and best checkpoints (`.npz` for custom, `.pt` for PyTorch).
   - Updated comparison flow to be explicit and artifact-driven by reading saved run summaries/histories rather than manually entered test errors.
 - Phases can overlap (e.g., write docs as you build each feature)
+
+*include phase 6 notes.
