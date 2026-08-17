@@ -1,0 +1,115 @@
+{
+  "run_id": "pytorch-20260817T213712Z-95a9df01",
+  "backend": "pytorch",
+  "created_at_utc": "20260817T213712Z",
+  "best_epoch": 10,
+  "best_val_loss": 0.34569296089808144,
+  "checkpoints": {
+    "latest": "I:\\Python\\DL\\Custom-Neural-Network-from-Scratch\\results\\latest\\pytorch\\best_checkpoint.pt",
+    "archive": "I:\\Python\\DL\\Custom-Neural-Network-from-Scratch\\results\\runs\\pytorch-20260817T213712Z-95a9df01\\pytorch\\best_checkpoint.pt"
+  },
+  "config": {
+    "input_size": 784,
+    "output_size": 10,
+    "hidden_units": 80,
+    "hidden_layers": 4,
+    "layer_specs": null,
+    "batch_size": 256,
+    "learning_rate": 0.002,
+    "epochs": 50,
+    "l2_lambda": 0.001,
+    "seed": 9782,
+    "dropout_rate_input": 0.1,
+    "dropout_rate_hidden": 0.3,
+    "bn_momentum": 0.185,
+    "bn_epsilon": 1e-05,
+    "adam_decay": 5e-07,
+    "adam_epsilon": 1e-07,
+    "adam_beta1": 0.9,
+    "adam_beta2": 0.999,
+    "patience": 5,
+    "min_delta": 1e-05
+  },
+  "history": {
+    "train_loss": [
+      0.7643316118793692,
+      0.48861398177350907,
+      0.44484352922057085,
+      0.4213008255882059,
+      0.4068145889011934,
+      0.3950051942611123,
+      0.386457604042349,
+      0.3833251952487517,
+      0.3758710621193769,
+      0.3675742644995929,
+      0.3659044290608901,
+      0.3662562169493201,
+      0.3601565264603671,
+      0.3579947476718515,
+      0.3496160109572232
+    ],
+    "val_loss": [
+      0.4723526247342428,
+      0.4119211426575979,
+      0.40087810945510866,
+      0.3757664527098338,
+      0.35423560468355814,
+      0.35823398248354593,
+      0.3669309967358907,
+      0.3628355015913645,
+      0.35304932316144305,
+      0.34569296089808144,
+      0.3523673896789551,
+      0.365308998187383,
+      0.3552529612382253,
+      0.34923188511530556,
+      0.3485998384157817
+    ],
+    "learning_rate": [
+      0.0019998130174828654,
+      0.0019996260699249244,
+      0.001999439157316373,
+      0.0019992522796474115,
+      0.001999065436908245,
+      0.001998878629089081,
+      0.00199869185618013,
+      0.0019985051181716077,
+      0.0019983184150537325,
+      0.0019981317468167267,
+      0.0019979451134508157,
+      0.0019977585149462303,
+      0.001997571951293203,
+      0.0019973854224819712,
+      0.001997198928502775
+    ]
+  },
+  "metrics": {
+    "train": {
+      "loss": 0.2746123777230581,
+      "accuracy": 0.903625,
+      "misclassification_error": 0.09637499999999999
+    },
+    "val": {
+      "loss": 0.34569296089808144,
+      "accuracy": 0.87575,
+      "misclassification_error": 0.12424999999999997
+    },
+    "test": {
+      "loss": 0.3644040311098099,
+      "accuracy": 0.8736,
+      "misclassification_error": 0.12639999999999996
+    }
+  },
+  "cli_args": {
+    "command": "pytorch",
+    "config": null,
+    "epochs": null,
+    "learning_rate": null,
+    "batch_size": null,
+    "hidden_layers": null,
+    "hidden_units": null,
+    "seed": null,
+    "no_early_stopping": false,
+    "save_path": "I:\\Python\\DL\\Custom-Neural-Network-from-Scratch\\results\\pytorch_history.json"
+  }
+}
