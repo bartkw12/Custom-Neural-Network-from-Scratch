@@ -3,7 +3,7 @@ import sys
 from .cli import main as cli_main
 
 
-_KNOWN_SUBCOMMANDS = {"custom", "pytorch", "compare"}
+_KNOWN_SUBCOMMANDS = {"custom", "pytorch", "compare", "analyze"}
 
 
 def _compat_argv(argv: list[str]) -> list[str]:
