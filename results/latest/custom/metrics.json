@@ -95,15 +95,18 @@
   "metrics": {
     "train": {
       "loss": 0.25924580033117545,
-      "accuracy": 0.9060833333333334
+      "accuracy": 0.9060833333333334,
+      "misclassification_error": 0.09391666666666665
     },
     "val": {
       "loss": 0.3309001118214927,
-      "accuracy": 0.8829166666666667
+      "accuracy": 0.8829166666666667,
+      "misclassification_error": 0.11708333333333332
     },
     "test": {
       "loss": 0.35517794477937575,
-      "accuracy": 0.8756
+      "accuracy": 0.8756,
+      "misclassification_error": 0.1244
     }
   },
   "cli_args": {
