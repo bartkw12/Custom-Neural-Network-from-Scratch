@@ -272,6 +272,11 @@ def _run_custom(args: argparse.Namespace) -> int:
     train_metrics = model.evaluate(x_train, y_train)
     val_metrics = model.evaluate(x_val, y_val)
     test_metrics = model.evaluate(x_test, y_test)
+
+    # Keep the custom summary metric schema aligned with the PyTorch summary.
+    for split_metrics in (train_metrics, val_metrics, test_metrics):
+        split_metrics["misclassification_error"] = 1.0 - float(split_metrics["accuracy"])
+
     artifacts = _persist_run_artifacts(
         backend="custom",
         args=args,
