@@ -97,18 +97,18 @@ Final generation notes in Phase 3 Implementation chat.
 ## Phase 7: Documentation & README
 > Rewrite the README to tell a story and showcase the work.
 
-- [ ] Project overview with motivation (why build from scratch?)
-- [ ] Architecture diagram (layer sizes, activations, techniques)
-- [ ] Math section: key equations for forward/backward pass (LaTeX in markdown)
-- [ ] Hyperparameter table with final chosen values and brief justification
-- [ ] Results section:
+- [x] Project overview with motivation (why build from scratch?)
+- [x] Architecture diagram (layer sizes, activations, techniques)
+- [x] Math section: key equations for forward/backward pass (LaTeX in markdown)
+- [x] Hyperparameter table with final chosen values and brief justification
+- [x] Results section:
   - Custom NN vs. PyTorch accuracy comparison table
   - Training curves (both implementations)
   - Confusion matrix
   - Per-class breakdown
-- [ ] Discussion: what matched, what differed, lessons learned
-- [ ] Installation & usage instructions (updated for new CLI)
-- [ ] Add type hints and docstrings to all public classes/methods
+- [x] Discussion: what matched, what differed, lessons learned
+- [x] Installation & usage instructions (updated for new CLI)
+- [x] Add type hints and docstrings to all public classes/methods
 
 ---
 
@@ -118,11 +118,11 @@ Final generation notes in Phase 3 Implementation chat.
 |-------|--------|--------|--------|
 | 1. Structural Cleanup | Medium | Low | Completed |
 | 2. Refactor to Class API | High | Medium | Completed |
-| 3. PyTorch Comparison | Very High | Medium | In Progress |
+| 3. PyTorch Comparison | Very High | Medium | Completed |
 | 4. Testing & Validation | High | Medium | Completed |
 | 5. CLI & Experiments | Medium | Low | Completed |
-| 6. Visualization | High | Low | Not Started |
-| 7. Documentation & README | Very High | Medium | Not Started |
+| 6. Visualization | High | Low | Completed |
+| 7. Documentation & README | Very High | Medium | Completed |
 
 ---
 
@@ -149,6 +149,13 @@ Final generation notes in Phase 3 Implementation chat.
   - Standardized artifact output to both `results/latest/<backend>/` and archived `results/runs/<run_id>/<backend>/` folders.
   - Persisted structured JSON summaries, history JSON, per-epoch CSV, and best checkpoints (`.npz` for custom, `.pt` for PyTorch).
   - Updated comparison flow to be explicit and artifact-driven by reading saved run summaries/histories rather than manually entered test errors.
+- Phase 6 completion notes:
+  - Added analysis tooling that generates confusion matrices for custom and PyTorch runs, per-class accuracy comparison, sample prediction grids, and combined training-curve plots.
+  - Final analysis artifacts are now written to `results/` (`confusion_matrix_*.png`, `per_class_accuracy_comparison.png`, `sample_predictions_*.png`, `comparison_training_curves.png`).
+  - Visualization results align with summary metrics and show expected Fashion-MNIST confusion patterns (especially `Shirt`-adjacent classes).
+- Phase 7 completion notes:
+  - Rewrote `README.md` end-to-end with motivation, architecture diagram, mathematical derivations, hyperparameter rationale, and artifact-backed results/discussion.
+  - Documented finalized CLI usage, reproducibility workflow, and artifact layout for both latest and archived runs.
+  - Added type hints and docstrings across public APIs in the custom implementation modules.
+  - Standardized custom run summaries to include `misclassification_error` so custom and PyTorch metrics now share the same schema.
 - Phases can overlap (e.g., write docs as you build each feature)
-
-*include phase 6 notes.
