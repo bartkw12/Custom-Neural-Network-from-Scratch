@@ -1,148 +1,200 @@
 # Custom Neural Network From Scratch
 
-!!! New README coming soon !!!
+## Overview
+This repository implements a fully connected neural network for Fashion-MNIST from first principles using NumPy. The goal is not just to train a classifier, but to expose and validate each part of the training stack: forward propagation, backward propagation, optimization, regularization, and evaluation.
 
-## Abstract
-This repository presents a fully connected neural network for the Fashion-MNIST classification dataset, implemented from first principles in NumPy, with PyTorch used only for dataset loading in the custom pipeline. The project is structured as a reusable Python package and includes a parallel PyTorch implementation for architecture and training pipeline comparison.
+To ground correctness and performance, the project includes a matched PyTorch reference implementation that uses the same architecture shape, data split, seed, and training hyperparameters.
 
-The current custom model supports mini-batch training with Adam optimization, L2 regularization, batch normalization, dropout, and early stopping. Hyperparameters and layer wiring are centralized through a typed `NetworkConfig` interface.
+## Why Build It From Scratch
+Frameworks hide critical mechanics that matter for debugging and research intuition. This project is designed to make those mechanics explicit:
 
-## Why Build a Neural Network From Scratch?
+- Manual gradient flow through Dense, ReLU, Softmax, Dropout, and BatchNorm layers
+- Explicit Adam updates including momentum/cache bias correction
+- Strict preprocessing hygiene (train-only standardization statistics)
+- Side-by-side validation against a framework implementation
+- Artifact-driven experimentation with reproducible run summaries
 
-High-level ML libraries make it easy to train models, but they hide the numerical and architectural details that make neural networks work. This project was built to demonstrate a deeper understanding of:
+## Architecture Diagram
+Default model topology from `NetworkConfig` (`hidden_layers=4`, `hidden_units=80`).
 
-- how tensors flow through a network during forward propagation
-- how gradients are derived and propagated during backpropagation
-- how optimizers such as Adam update parameters
-- how dropout, batch normalization, and L2 regularization affect training
-- how train/validation/test preprocessing should be structured to avoid data leakage
-- how a custom implementation can be compared against a framework implementation
+```mermaid
+flowchart TD
+	A[Input Image\n28x28 grayscale] --> B[Flatten\n784 features]
+	B --> C[Dense 784->80]
+	C --> D[BatchNorm]
+	D --> E[ReLU]
+	E --> F[Dropout p=0.10]
 
-## Features
+	F --> G[Dense 80->80]
+	G --> H[BatchNorm]
+	H --> I[ReLU]
+	I --> J[Dropout p=0.30]
 
+	J --> K[Dense 80->80]
+	K --> L[BatchNorm]
+	L --> M[ReLU]
+	M --> N[Dropout p=0.30]
 
-### Custom NumPy Implementation
+	N --> O[Dense 80->80]
+	O --> P[BatchNorm]
+	P --> Q[ReLU]
+	Q --> R[Dropout p=0.30]
 
-- Fully connected dense layers
-- ReLU activation
-- Softmax classification output
-- Cross-entropy loss
-- Manual backpropagation
-- Mini-batch training
-- Adam optimizer
-- L2 regularization
-- Dropout using inverted dropout scaling
-- Batch normalization
-- Early stopping
-- Model evaluation and prediction API
-- Save/load support for trained parameters
-
-
-### PyTorch Reference Implementation
-
-- Equivalent architecture for comparison
-- Same Fashion-MNIST preprocessing pipeline
-- Same train/validation/test split
-- Matching hyperparameters where possible
-- Training and validation history logging
-- Test accuracy comparison
-
-
-### Planned / In Progress
-
-- Confusion matrix visualization
-- Per-class accuracy analysis
-- Sample prediction grids (correct vs. incorrect)
-
-
-
-## Method Summary
-- `custom_nn`: the primary from scratch implementation under `src/custom_nn`
-- `NeuralNetwork`: reusable training, evaluation, prediction, save, and load API
-- `NetworkConfig`: centralized configuration for architecture and training behavior
-- `pytorch_nn`: reference implementation built around the same layer specification and preprocessing flow
-- shared Fashion-MNIST preprocessing: shuffle, train/validation split, one-hot encoding, and standardization from training statistics only
-
-## Training Pipeline
-
-The training pipeline follows these steps:
-
-1. Load Fashion-MNIST using `torchvision`.
-2. Convert images and labels into NumPy arrays.
-3. Shuffle the training set using a fixed random seed.
-4. Split the original training set into training and validation subsets.
-5. One-hot encode labels.
-6. Standardize features using statistics computed from the training set only.
-7. Train the custom NumPy network using mini-batch gradient descent with Adam.
-8. Track training and validation loss across epochs.
-9. Apply early stopping based on validation performance.
-10. Evaluate the final model on the held-out test set.
-
-## Model Architecture
-
-The default custom network is a fully connected classifier for flattened Fashion-MNIST images.
-
-```text
-Input: 28 × 28 grayscale image
-Flatten: 784 features
-Dense Layer: [PLACEHOLDER: hidden units]
-Batch Normalization
-ReLU
-Dropout
-Dense Layer: [PLACEHOLDER: hidden units]
-Batch Normalization
-ReLU
-Dropout
-Output Dense Layer: 10 classes
-Softmax + Cross-Entropy Loss.
+	R --> S[Dense 80->10]
+	S --> T[Softmax]
+	T --> U[Categorical Cross-Entropy Loss]
 ```
 
-## Training Result
-![Training Curve](results/trainingcurve.JPG)
-
-The plot above is retained from the current repository results. Training history from the custom implementation is also written to `results/custom_nn_history.json` for later inspection.
-
-
-## Mathematical Overview
-
-This implementation manually computes all forward and backward operations.
+## Mathematical Core
+Let a mini-batch input be $X \in \mathbb{R}^{m \times d}$ and labels be one-hot vectors.
 
 ### Dense Layer
-
-Forward pass:
-
-```math
+$$
 Z = XW + b
-```
+$$
 
-Backward pass:
-```math
-\frac{\partial L}{\partial W} = X^T \frac{\partial L}{\partial Z}
-```
-
-```math
-\frac{\partial L}{\partial b} = \sum_i \frac{\partial L}{\partial Z_i}
-```
-
-```math
+$$
+\frac{\partial L}{\partial W} = X^T \frac{\partial L}{\partial Z} + \lambda W,
+\quad
+\frac{\partial L}{\partial b} = \sum_{i=1}^{m} \frac{\partial L}{\partial Z_i},
+\quad
 \frac{\partial L}{\partial X} = \frac{\partial L}{\partial Z} W^T
-```
+$$
 
-### ReLU Activation
-```math
-\text{ReLU}(x) = \max(0, x)
-```
+### ReLU
+$$
+\mathrm{ReLU}(x)=\max(0,x),
+\quad
+\frac{\partial L}{\partial x} = \frac{\partial L}{\partial y}\,\mathbb{1}_{x>0}
+$$
 
-### Softmax Activation
-```math
-\hat{y}_i = \frac{e^{z_i}}{\sum_j e^{z_j}}
-```
+### Softmax + Cross-Entropy
+$$
+\hat{y}_k = \frac{e^{z_k}}{\sum_j e^{z_j}},
+\quad
+L = -\frac{1}{m}\sum_{i=1}^{m}\sum_{k=1}^{K} y_{ik}\log(\hat{y}_{ik})
+$$
 
-### Cross-Entropy Loss
-```math
-L = -\sum_i y_i \log \hat{y}_i
-```
+With the fused derivative used in this implementation:
+$$
+\frac{\partial L}{\partial z} = \frac{\hat{y}-y}{m}
+$$
 
+### Batch Normalization
+For feature-wise batch statistics:
+$$
+\mu_B = \frac{1}{m}\sum_i x_i,
+\quad
+\sigma_B^2 = \frac{1}{m}\sum_i (x_i-\mu_B)^2,
+\quad
+\hat{x}_i = \frac{x_i-\mu_B}{\sqrt{\sigma_B^2+\epsilon}}
+$$
+
+$$
+y_i = \gamma \hat{x}_i + \beta
+$$
+
+### Inverted Dropout
+During training (keep probability $p$):
+$$
+	ilde{x} = \frac{M \odot x}{p}, \quad M \sim \mathrm{Bernoulli}(p)
+$$
+At inference: identity pass-through.
+
+### Adam Update
+$$
+m_t = \beta_1 m_{t-1} + (1-\beta_1)g_t,
+\quad
+v_t = \beta_2 v_{t-1} + (1-\beta_2)g_t^2
+$$
+
+$$
+\hat{m}_t = \frac{m_t}{1-\beta_1^t},
+\quad
+\hat{v}_t = \frac{v_t}{1-\beta_2^t},
+\quad
+	heta_t = \theta_{t-1} - \eta\frac{\hat{m}_t}{\sqrt{\hat{v}_t}+\epsilon}
+$$
+
+## Final Hyperparameters
+The table below reflects the run configuration captured in `results/latest/*/run_summary.json`.
+
+| Parameter | Value | Why this value |
+|---|---:|---|
+| `epochs` | 50 (max) | Upper bound; early stopping usually ends training earlier. |
+| `batch_size` | 256 | Stable gradients with good throughput for 784-dim dense inputs. |
+| `learning_rate` | 0.002 | Fast early convergence without destabilizing Adam updates. |
+| `hidden_layers` | 4 | Adds representational depth while keeping FC architecture tractable. |
+| `hidden_units` | 80 | Balanced capacity for Fashion-MNIST with manageable overfitting risk. |
+| `l2_lambda` | 0.001 | Controls weight magnitude and improves generalization. |
+| `dropout_rate_input` | 0.10 | Mild regularization near input to preserve signal. |
+| `dropout_rate_hidden` | 0.30 | Stronger regularization in hidden blocks. |
+| `bn_momentum` | 0.185 | Intentionally low EMA momentum per project design choice. |
+| `bn_epsilon` | 1e-5 | Numerical stability in normalization. |
+| `adam_beta1` | 0.9 | Standard first-moment momentum. |
+| `adam_beta2` | 0.999 | Standard second-moment smoothing. |
+| `adam_epsilon` | 1e-7 | Stable denominator in Adam step. |
+| `adam_decay` | 5e-7 | Per-batch learning-rate decay for gradual step-size reduction. |
+| `patience` | 5 | Stop when validation no longer improves for several epochs. |
+| `min_delta` | 1e-5 | Ignore tiny fluctuations as non-improvements. |
+| `seed` | 9782 | Reproducible split/shuffle/initialization behavior. |
+
+## Results
+Run artifacts used here:
+
+- Custom: `custom-20260817T213611Z-8095902b`
+- PyTorch: `pytorch-20260817T213712Z-95a9df01`
+
+### Accuracy Comparison
+| Model | Test Accuracy | Test Misclassification Error | Best Epoch | Best Val Loss |
+|---|---:|---:|---:|---:|
+| Custom NumPy NN | 87.56% | 12.44% | 13 | 0.3309 |
+| PyTorch Reference NN | 87.36% | 12.64% | 10 | 0.3457 |
+
+### Training Curves
+![Combined Training Curves](results/comparison_training_curves.png)
+
+### Additional Comparison Artifacts
+![Training Loss Comparison](results/comparison_train_loss.png)
+![Validation Loss Comparison](results/comparison_val_loss.png)
+![Accuracy Table Figure](results/comparison_accuracy_table.png)
+
+### Confusion Matrices
+![Custom Confusion Matrix](results/confusion_matrix_custom.png)
+![PyTorch Confusion Matrix](results/confusion_matrix_pytorch.png)
+
+### Per-Class Accuracy
+![Per-Class Accuracy Comparison](results/per_class_accuracy_comparison.png)
+
+### Sample Predictions
+![Custom Sample Predictions](results/sample_predictions_custom.png)
+![PyTorch Sample Predictions](results/sample_predictions_pytorch.png)
+
+### Per-Class Breakdown (From Confusion/Per-Class Plots)
+| Trend | Observation |
+|---|---|
+| Hardest class | `Shirt` is the most difficult class for both implementations. |
+| Easiest classes | `Trouser`, `Bag`, and footwear classes (`Sandal`, `Sneaker`, `Ankle boot`) are strongest. |
+| Common confusions | `Shirt` vs `T-shirt/top`/`Pullover`/`Coat`; some `Sneaker` vs `Ankle boot` mix-ups. |
+| Cross-framework behavior | Error patterns are qualitatively similar, supporting parity between implementations. |
+
+## Discussion
+What matched:
+
+- Final test performance is very close (0.20 percentage-point accuracy gap).
+- Learning curves have similar descent and validation-floor behavior.
+- Confusion structure aligns by class, especially on hard categories.
+
+What differed:
+
+- Custom run reached a lower best validation loss and slightly better test accuracy in this seed/run pair.
+- Early stopping terminated at different epochs (13 vs 10), which is expected due to implementation/runtime differences.
+
+Key lessons:
+
+- The from-scratch implementation is mathematically sound and competitive with framework baselines.
+- Most remaining gains likely come from architecture/data augmentation choices, not optimizer bugs.
+- Artifact-driven comparisons are essential; aggregate accuracy alone hides class-specific failure modes.
 
 ## Installation
 ```bash
@@ -152,50 +204,32 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-## Reproducing a Run
+## Usage
+Compatibility entry points:
+
 ```bash
 python train.py
-```
-
-Or run the package entry point:
-
-```bash
 python -m custom_nn
 ```
 
-These compatibility paths default to the `custom` subcommand of the unified CLI.
-
-### Unified CLI Commands
-
-Run custom NumPy training:
+Unified CLI commands:
 
 ```bash
 python train.py custom
-```
-
-Run PyTorch reference training:
-
-```bash
 python train.py pytorch
-```
-
-Generate explicit comparison artifacts from saved run outputs:
-
-```bash
 python train.py compare
+python train.py analyze
 ```
 
-PyTorch compatibility entry point (also delegates to the unified CLI):
+PyTorch compatibility entry point:
 
 ```bash
 python run_pytorch.py
 ```
 
-### Common Training Flags
+Common flags (`custom` and `pytorch`):
 
-The `custom` and `pytorch` subcommands share the same experiment flags:
-
-- `--config` (JSON config file)
+- `--config`
 - `--epochs`
 - `--learning-rate`
 - `--batch-size`
@@ -205,44 +239,14 @@ The `custom` and `pytorch` subcommands share the same experiment flags:
 - `--no-early-stopping`
 - `--save-path`
 
-Example with overrides:
+Example:
 
 ```bash
 python train.py custom --epochs 20 --learning-rate 0.001 --batch-size 128
 ```
 
-### JSON Config File Format
-
-The CLI accepts a JSON object whose keys map directly to `NetworkConfig` fields.
-CLI flags override values from the config file.
-
-Example `experiment.json`:
-
-```json
-{
-	"epochs": 12,
-	"learning_rate": 0.001,
-	"batch_size": 128,
-	"hidden_layers": 3,
-	"hidden_units": 96,
-	"seed": 9782,
-	"l2_lambda": 0.001,
-	"dropout_rate_input": 0.1,
-	"dropout_rate_hidden": 0.3,
-	"patience": 5,
-	"min_delta": 1e-05
-}
-```
-
-Run with config:
-
-```bash
-python train.py pytorch --config experiment.json
-```
-
-### Artifact Output Layout
-
-Each completed training run writes artifacts to both a stable "latest" location and a timestamped archive location.
+## Reproducibility and Artifacts
+Every run writes both latest and archived outputs.
 
 ```text
 results/
@@ -260,21 +264,12 @@ results/
 │       ├── history.csv
 │       └── best_checkpoint.pt
 └── runs/
-		└── <run_id>/
-				├── custom/
-				└── pytorch/
+	└── <run_id>/
+		├── custom/
+		└── pytorch/
 ```
 
-The compare workflow is explicit and artifact-driven. By default it reads:
-
-- `results/latest/custom/run_summary.json`
-- `results/latest/custom/history.json`
-- `results/latest/pytorch/run_summary.json`
-- `results/latest/pytorch/history.json`
-
-On first run, `torchvision` downloads Fashion-MNIST into `data/`.
-
-## Programmatic Usage
+## Programmatic API
 ```python
 from custom_nn import NeuralNetwork, NetworkConfig, load_fashion_MNIST, preprocess_data
 
@@ -282,19 +277,19 @@ config = NetworkConfig()
 model = NeuralNetwork(config)
 
 train_dataset, test_dataset = load_fashion_MNIST(seed=config.seed)
-(X_train, Y_train), (X_val, Y_val), (X_test, Y_test) = preprocess_data(train_dataset, test_dataset)
+(x_train, y_train), (x_val, y_val), (x_test, y_test) = preprocess_data(train_dataset, test_dataset)
 
-history = model.train(X_train, Y_train, X_val, Y_val)
-metrics = model.evaluate(X_test, Y_test)
+history = model.train(x_train, y_train, x_val, y_val)
+metrics = model.evaluate(x_test, y_test)
 ```
 
 ## Repository Layout
 ```text
 src/
-├── custom_nn/   NumPy-based NN, training pipeline, and configuration
-└── pytorch_nn/  PyTorch reference model and comparison utilities
-train.py         Thin compatibility entry point to unified CLI
-run_pytorch.py   Thin compatibility entry point to unified CLI (PyTorch default)
-results/         Run artifacts (latest + archived runs), plots, and histories
-data/            Fashion-MNIST download cache
+├── custom_nn/   NumPy-based model, CLI, preprocessing, and training code
+└── pytorch_nn/  Reference model, training utilities, comparison/analysis helpers
+train.py         Compatibility entry point to unified CLI
+run_pytorch.py   Compatibility entry point (PyTorch default)
+results/         Run summaries, checkpoints, histories, and visualization artifacts
+data/            Fashion-MNIST cache
 ```
