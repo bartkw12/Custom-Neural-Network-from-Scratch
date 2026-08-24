@@ -10,6 +10,7 @@ See [gameplan.md](gameplan.md) for the planned improvement roadmap (7 phases).
 
 ```
 src/custom_nn/
+├── cli.py                 # Unified CLI (custom, pytorch, compare, analyze)
 ├── config.py              # Hyperparameters + NetworkConfig dataclass
 ├── data_preprocessing.py  # Fashion MNIST loading & preprocessing pipeline
 ├── model.py               # Layer_Dense, Activation_ReLU, Activation_Softmax, loss
@@ -17,11 +18,18 @@ src/custom_nn/
 ├── techniques.py          # ADAM_Optimizer, Early_Stopping, Dropout, Batch_Normalization
 ├── __init__.py            # Public package exports
 └── __main__.py            # Package entry point for `python -m custom_nn`
+src/pytorch_nn/
+├── model.py               # PyTorch reference network matching custom architecture
+├── train.py               # PyTorch training/evaluation helpers
+├── compare.py             # Comparison artifact helpers (loss/error plots)
+├── analyze.py             # Analysis visualizations (confusion matrix, per-class, samples)
+└── __init__.py
 train.py                   # Thin training script (repo entry point)
-results/                   # Saved figures and model outputs
+run_pytorch.py             # Compatibility entry point for PyTorch runs
+results/                   # Latest/archive run summaries, checkpoints, and figures
 ```
 
-**Data flow**: Load Fashion MNIST → NumPy arrays → standardize (train stats only) → `NeuralNetwork.train()` mini-batch loop → forward/backward/ADAM update → early stopping
+**Data flow**: Load Fashion MNIST → NumPy arrays → standardize (train stats only) → `NeuralNetwork.train()` mini-batch loop → forward/backward/ADAM update → early stopping → persist summaries/checkpoints → compare/analyze artifact generation
 
 ## Conventions
 
@@ -43,11 +51,16 @@ python train.py
 
 # Or run the package entry point
 python -m custom_nn
+
+# Explicit workflows
+python train.py custom
+python train.py pytorch
+python train.py compare
+python train.py analyze
 ```
 
 ## Known Issues
 
-- `plt.show()` at end of training blocks until figure window is closed.
 - `train.py` prepends `src/` to `sys.path` so it can run directly from the repo root before installation. After `pip install -e .`, package imports work without that fallback.
 - `NetworkConfig` currently coexists with legacy module-level constants in `config.py` as a transition step.
 
