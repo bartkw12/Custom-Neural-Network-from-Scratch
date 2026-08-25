@@ -101,4 +101,39 @@ jobs:
           fi
 
           python train.py compare
-          python train.py analyze --sample-count 9 --sample-seed 9782
+
+          # Normalize checkpoint paths in summaries for CI portability.
+          # Local summaries can contain machine-specific absolute paths (e.g., I:\\... on Windows).
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path.cwd()
+          custom_summary = root / "results/latest/custom/run_summary.json"
+          pytorch_summary = root / "results/latest/pytorch/run_summary.json"
+
+          custom_out = root / "results/latest/custom/run_summary.ci.json"
+          pytorch_out = root / "results/latest/pytorch/run_summary.ci.json"
+
+          with custom_summary.open("r", encoding="utf-8") as handle:
+              custom = json.load(handle)
+          with pytorch_summary.open("r", encoding="utf-8") as handle:
+              pytorch = json.load(handle)
+
+          custom["checkpoints"]["latest"] = str(root / "results/latest/custom/best_checkpoint.npz")
+          custom["checkpoints"]["archive"] = str(root / "results/latest/custom/best_checkpoint.npz")
+
+          pytorch["checkpoints"]["latest"] = str(root / "results/latest/pytorch/best_checkpoint.pt")
+          pytorch["checkpoints"]["archive"] = str(root / "results/latest/pytorch/best_checkpoint.pt")
+
+          with custom_out.open("w", encoding="utf-8") as handle:
+              json.dump(custom, handle, indent=2)
+          with pytorch_out.open("w", encoding="utf-8") as handle:
+              json.dump(pytorch, handle, indent=2)
+          PY
+
+          python train.py analyze \
+            --custom-summary results/latest/custom/run_summary.ci.json \
+            --pytorch-summary results/latest/pytorch/run_summary.ci.json \
+            --sample-count 9 \
+            --sample-seed 9782
