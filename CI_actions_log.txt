@@ -1,0 +1,26 @@
+Fails on step: Compare/analyze smoke (artifact aware)
+
+8s
+Run set -euo pipefail
+train_loss_plot: /home/runner/work/Custom-Neural-Network-from-Scratch/Custom-Neural-Network-from-Scratch/results/comparison_train_loss.png
+val_loss_plot: /home/runner/work/Custom-Neural-Network-from-Scratch/Custom-Neural-Network-from-Scratch/results/comparison_val_loss.png
+accuracy_table: /home/runner/work/Custom-Neural-Network-from-Scratch/Custom-Neural-Network-from-Scratch/results/comparison_accuracy_table.png
+Traceback (most recent call last):
+  File "/home/runner/work/Custom-Neural-Network-from-Scratch/Custom-Neural-Network-from-Scratch/train.py", line 28, in <module>
+    raise SystemExit(main())
+  File "/home/runner/work/Custom-Neural-Network-from-Scratch/Custom-Neural-Network-from-Scratch/train.py", line 24, in main
+    return cli_main(_compat_argv(arguments))
+  File "/home/runner/work/Custom-Neural-Network-from-Scratch/Custom-Neural-Network-from-Scratch/src/custom_nn/cli.py", line 443, in main
+    return args.handler(args)
+  File "/home/runner/work/Custom-Neural-Network-from-Scratch/Custom-Neural-Network-from-Scratch/src/custom_nn/cli.py", line 365, in _run_analyze
+    artifacts = generate_analysis_artifacts(
+  File "/home/runner/work/Custom-Neural-Network-from-Scratch/Custom-Neural-Network-from-Scratch/src/pytorch_nn/analyze.py", line 411, in generate_analysis_artifacts
+    custom_model = _load_custom_model(custom_summary)
+  File "/home/runner/work/Custom-Neural-Network-from-Scratch/Custom-Neural-Network-from-Scratch/src/pytorch_nn/analyze.py", line 93, in _load_custom_model
+    model.load(checkpoint_path)
+  File "/home/runner/work/Custom-Neural-Network-from-Scratch/Custom-Neural-Network-from-Scratch/src/custom_nn/network.py", line 216, in load
+    loaded = np.load(path)
+  File "/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/site-packages/numpy/lib/_npyio_impl.py", line 451, in load
+    fid = stack.enter_context(open(os.fspath(file), "rb"))
+FileNotFoundError: [Errno 2] No such file or directory: 'I:\\Python\\DL\\Custom-Neural-Network-from-Scratch\\results\\latest\\custom\\best_checkpoint.npz'
+Error: Process completed with exit code 1.
