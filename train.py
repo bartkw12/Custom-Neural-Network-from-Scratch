@@ -1,10 +1,9 @@
-from pathlib import Path
 import sys
+from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 
 from custom_nn.cli import main as cli_main
-
 
 _KNOWN_SUBCOMMANDS = {"custom", "pytorch", "compare", "analyze"}
 
