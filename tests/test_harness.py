@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from custom_nn import NeuralNetwork, NetworkConfig
-
+from custom_nn import NetworkConfig, NeuralNetwork
 from tests.helpers import (
     as_float64,
     build_batch_norm_test_config,

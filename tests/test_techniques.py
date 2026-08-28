@@ -3,8 +3,12 @@ from __future__ import annotations
 import numpy as np
 
 from custom_nn.model import Layer_Dense
-from custom_nn.techniques import ADAM_Optimizer, Batch_Normalization, Dropout, Early_Stopping
-
+from custom_nn.techniques import (
+    ADAM_Optimizer,
+    Batch_Normalization,
+    Dropout,
+    Early_Stopping,
+)
 from tests.helpers import as_float64
 
 

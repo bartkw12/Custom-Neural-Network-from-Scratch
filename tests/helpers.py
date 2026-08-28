@@ -6,7 +6,6 @@ import numpy as np
 
 from custom_nn import NetworkConfig
 
-
 Array = np.ndarray
 
 

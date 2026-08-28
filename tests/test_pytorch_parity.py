@@ -8,8 +8,13 @@ from custom_nn import NeuralNetwork
 from custom_nn.model import Layer_Dense
 from custom_nn.techniques import Batch_Normalization
 from pytorch_nn import FashionMNISTNet
-
-from tests.helpers import as_float64, build_batch_norm_test_config, build_linear_test_config, one_hot, tiny_probe_batch
+from tests.helpers import (
+    as_float64,
+    build_batch_norm_test_config,
+    build_linear_test_config,
+    one_hot,
+    tiny_probe_batch,
+)
 
 
 def _sync_custom_parameters_to_pytorch(custom_model: NeuralNetwork, pytorch_model: FashionMNISTNet) -> None:

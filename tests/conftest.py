@@ -6,7 +6,6 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = PROJECT_ROOT / "src"
 
@@ -15,7 +14,6 @@ if str(SRC_ROOT) not in sys.path:
 
 
 from custom_nn import NetworkConfig
-
 from tests.helpers import (
     build_batch_norm_test_config,
     build_dense_relu_test_config,

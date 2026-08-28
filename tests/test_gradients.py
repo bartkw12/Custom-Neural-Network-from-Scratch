@@ -2,9 +2,13 @@ from __future__ import annotations
 
 import numpy as np
 
-from custom_nn.model import Activation_ReLU, Activation_Softmax, Categorical_Cross_entropy_loss, Layer_Dense
+from custom_nn.model import (
+    Activation_ReLU,
+    Activation_Softmax,
+    Categorical_Cross_entropy_loss,
+    Layer_Dense,
+)
 from custom_nn.techniques import Batch_Normalization
-
 from tests.helpers import as_float64, finite_difference_gradient, relative_error
 
 

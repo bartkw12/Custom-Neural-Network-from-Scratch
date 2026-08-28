@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 
 from custom_nn import NeuralNetwork
-
 from tests.helpers import as_float64, build_linear_test_config, one_hot
 
 
