@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=7.0"]
+dev = ["pytest>=7.0", "ruff>=0.6", "build>=1.0"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -24,3 +24,7 @@ python_files = ["test_*.py"]
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["custom_nn", "pytorch_nn"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = ["E501", "E402"]
